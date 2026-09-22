@@ -3,11 +3,25 @@
 @section('title', 'Dashboard Anggota')
 
 @section('content')
-    <h2>Dashboard Anggota</h2>
-    <dl>
-        <dt>Tugas aktif</dt><dd>{{ $activeTasks }}</dd>
-        <dt>Tugas mendatang</dt><dd>{{ $upcomingTasks }}</dd>
-        <dt>Tugas selesai</dt><dd>{{ $completedTasks }}</dd>
-        <dt>Upah belum dibayar</dt><dd>{{ $unpaidWages }}</dd>
-    </dl>
+<h2>Dashboard Anggota</h2>
+<div class="stat-row">
+  <div class="stat-card">
+    <div class="k">Tugas aktif</div>
+    <div class="v">{{ $activeTasks }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="k">Tugas mendatang</div>
+    <div class="v">{{ $upcomingTasks }}</div>
+  </div>
+</div>
+<div class="stat-row">
+  <div class="stat-card">
+    <div class="k">Tugas selesai</div>
+    <div class="v">{{ $completedTasks }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="k">Upah belum dibayar</div>
+    <div class="v">{{ $unpaidWages }}</div>
+  </div>
+</div>
 @endsection
