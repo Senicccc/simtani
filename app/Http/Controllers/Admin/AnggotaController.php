@@ -70,4 +70,16 @@ class AnggotaController extends Controller
 
         return redirect()->route('admin.anggota.index')->with('success', 'Anggota berhasil diperbarui.');
     }
+
+    public function destroy(User $anggota): RedirectResponse
+    {
+        if ($anggota->penugasan()->exists()) {
+            return redirect()->route('admin.anggota.index')
+                ->withErrors(['hapus' => 'Anggota "'.$anggota->nama_lengkap.'" punya riwayat penugasan dan tidak bisa dihapus permanen (data jadwal/presensi/upah terkait ikut bergantung). Gunakan Nonaktifkan lewat menu Edit.']);
+        }
+
+        $anggota->delete();
+
+        return redirect()->route('admin.anggota.index')->with('success', 'Anggota berhasil dihapus.');
+    }
 }

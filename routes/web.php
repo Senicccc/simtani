@@ -39,6 +39,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/anggota', [AnggotaController::class, 'store'])->name('anggota.store');
         Route::get('/anggota/{anggota}/edit', [AnggotaController::class, 'edit'])->name('anggota.edit');
         Route::put('/anggota/{anggota}', [AnggotaController::class, 'update'])->name('anggota.update');
+        Route::delete('/anggota/{anggota}', [AnggotaController::class, 'destroy'])->name('anggota.destroy');
 
         Route::get('/jenis-pekerjaan', [JenisPekerjaanController::class, 'index'])->name('jenis-pekerjaan.index');
         Route::get('/jenis-pekerjaan/create', [JenisPekerjaanController::class, 'create'])->name('jenis-pekerjaan.create');
