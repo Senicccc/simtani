@@ -1,0 +1,3 @@
+@extends('layouts.backend')
+@section('title', 'Upah Saya')
+@section('content')<h2>Upah Saya</h2><table><thead><tr><th>Tanggal kegiatan</th><th>Kegiatan</th><th>Jumlah</th><th>Status</th><th>Dibayar pada</th><th>Dibayar lewat</th></tr></thead><tbody>@forelse($upah as $item)<tr><td>{{ $item->penugasan->jadwal->tanggal?->format('d-m-Y') ?? '-' }}</td><td>{{ $item->penugasan->jadwal->nama_kegiatan ?? '-' }}</td><td>{{ $item->jumlah_upah }}</td><td>{{ $item->status_pembayaran }}</td><td>{{ $item->waktu_pembayaran?->format('d-m-Y H:i:s') ?? '-' }}</td><td>{{ $item->metode_pembayaran ?? '-' }}</td></tr>@empty<tr><td colspan="6">Belum ada data upah.</td></tr>@endforelse</tbody></table>@endsection

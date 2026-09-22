@@ -1,0 +1,3 @@
+@extends('layouts.backend')
+@section('title', 'Detail Permintaan')
+@section('content')<h2>Detail Permintaan Perubahan</h2><dl><dt>Pengaju</dt><dd>{{ $permintaan->diajukanOleh->nama_lengkap ?? '-' }}</dd><dt>Jenis</dt><dd>{{ $permintaan->jenis_permintaan }}</dd><dt>Alasan</dt><dd>{{ $permintaan->alasan }}</dd><dt>Status</dt><dd>{{ $permintaan->status }}</dd></dl>@if($permintaan->status === 'pending')<form method="post" action="{{ route('admin.permintaan-perubahan.process', $permintaan) }}">@csrf<label>Catatan admin <textarea name="catatan_admin"></textarea></label><button name="action" value="approve" type="submit">Setujui</button><button name="action" value="reject" type="submit">Tolak</button></form>@endif@endsection
