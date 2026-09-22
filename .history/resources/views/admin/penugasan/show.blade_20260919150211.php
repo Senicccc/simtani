@@ -1,0 +1,3 @@
+@extends('layouts.backend')
+@section('title', 'Detail Penugasan')
+@section('content')<h2>Detail Penugasan</h2><dl><dt>Kegiatan</dt><dd>{{ $penugasan->jadwal->nama_kegiatan ?? '-' }}</dd><dt>Anggota</dt><dd>{{ $penugasan->anggota->nama_lengkap ?? '-' }}</dd><dt>Status</dt><dd>{{ $penugasan->status }}</dd><dt>Presensi</dt><dd>{{ $penugasan->presensi?->status ?? 'Belum ada' }}</dd><dt>Upah</dt><dd>{{ $penugasan->upah?->jumlah_upah ?? 'Belum dihitung' }}</dd></dl><p><a href="{{ route('admin.penugasan.edit', $penugasan) }}">Edit</a></p>@if($penugasan->status === 'waiting_verification')<form method="post" action="{{ route('admin.penugasan.verify', $penugasan) }}">@csrf<button type="submit">Verifikasi selesai</button></form>@endif@endsection

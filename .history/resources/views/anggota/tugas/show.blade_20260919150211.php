@@ -1,0 +1,3 @@
+@extends('layouts.backend')
+@section('title', 'Detail Tugas')
+@section('content')<h2>{{ $penugasan->jadwal->nama_kegiatan ?? 'Tugas' }}</h2><dl><dt>Status</dt><dd>{{ $penugasan->status }}</dd><dt>Tanggal</dt><dd>{{ $penugasan->jadwal->tanggal ?? '-' }}</dd><dt>Presensi</dt><dd>{{ $penugasan->presensi?->status ?? 'Belum ada' }}</dd></dl>@if($penugasan->status === 'assigned')<form method="post" action="{{ route('anggota.tugas.mulai', $penugasan) }}">@csrf<button type="submit">Mulai tugas</button></form>@endif@if(in_array($penugasan->status, ['in_progress', 'assigned']))<a href="{{ route('anggota.tugas.complete.form', $penugasan) }}">Laporkan selesai</a>@endif@endsection

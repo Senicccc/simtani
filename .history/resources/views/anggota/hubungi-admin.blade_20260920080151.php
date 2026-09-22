@@ -1,0 +1,3 @@
+@extends('layouts.backend')
+@section('title', 'Hubungi Admin')
+@section('content')<h2>Hubungi Admin</h2><ul>@forelse($admins as $admin)<li>{{ $admin->nama_lengkap }}@if($admin->nomor_wa) - <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $admin->nomor_wa) }}" target="_blank" rel="noopener">WhatsApp</a>@endif@if($admin->email) - <a href="mailto:{{ $admin->email }}">Email</a>@endif</li>@empty<li>Kontak admin belum tersedia.</li>@endforelse</ul>@endsection

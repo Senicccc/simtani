@@ -1,0 +1,3 @@
+@extends('layouts.backend')
+@section('title', 'Laporan')
+@section('content')<h2>Laporan</h2><form method="get"><label>Mulai <input type="date" name="tanggal_mulai" value="{{ $start }}"></label><label>Selesai <input type="date" name="tanggal_selesai" value="{{ $end }}"></label><label>Anggota ID <input type="number" name="anggota" value="{{ $anggota }}"></label><button type="submit">Filter</button></form><h3>Ringkasan</h3><dl><dt>Jadwal</dt><dd>{{ $rekapJadwal->count() }}</dd><dt>Tugas</dt><dd>{{ $rekapTugas->count() }}</dd><dt>Presensi</dt><dd>{{ $rekapPresensi->count() }}</dd><dt>Upah</dt><dd>{{ $rekapUpah->count() }}</dd></dl>@endsection

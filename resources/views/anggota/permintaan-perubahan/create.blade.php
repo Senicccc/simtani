@@ -1,0 +1,3 @@
+@extends('layouts.backend')
+@section('title', 'Buat Permintaan Perubahan')
+@section('content')<h2>Buat Permintaan Perubahan</h2><form method="post" action="{{ route('anggota.permintaan-perubahan.store') }}">@csrf<label>Penugasan <select name="penugasan_id" required>@foreach($penugasan as $item)<option value="{{ $item->id }}">{{ $item->jadwal->nama_kegiatan ?? $item->id }}</option>@endforeach</select></label><label>Jenis <select name="jenis_permintaan"><option value="tukar">Tukar</option><option value="sanggah">Sanggah</option></select></label><label>Target penugasan ID <input type="number" name="target_penugasan_id"></label><label>Alasan <textarea name="alasan" required></textarea></label><button type="submit">Kirim</button></form>@endsection

@@ -1,0 +1,3 @@
+@extends('layouts.backend')
+@section('title', 'Presensi Saya')
+@section('content')<h2>Presensi Saya</h2><table><thead><tr><th>Kegiatan</th><th>Check-in</th><th>Check-out</th><th>Status</th><th>Aksi</th></tr></thead><tbody>@forelse($presensi as $item)<tr><td>{{ $item->penugasan->jadwal->nama_kegiatan ?? '-' }}</td><td>{{ $item->waktu_check_in ?? '-' }}</td><td>{{ $item->waktu_check_out ?? '-' }}</td><td>{{ $item->status }}</td><td>@if(!$item->waktu_check_out)<form method="post" action="{{ route('anggota.presensi.check-out', $item->penugasan) }}">@csrf<button type="submit">Check-out</button></form>@endif</td></tr>@empty<tr><td colspan="5">Belum ada presensi.</td></tr>@endforelse</tbody></table>@endsection

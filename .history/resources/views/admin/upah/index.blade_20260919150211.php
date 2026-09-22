@@ -1,0 +1,3 @@
+@extends('layouts.backend')
+@section('title', 'Upah')
+@section('content')<h2>Upah</h2><table><thead><tr><th>Anggota</th><th>Kegiatan</th><th>Jumlah</th><th>Status</th><th>Aksi</th></tr></thead><tbody>@forelse($upah as $item)<tr><td>{{ $item->penugasan->anggota->nama_lengkap ?? '-' }}</td><td>{{ $item->penugasan->jadwal->nama_kegiatan ?? '-' }}</td><td>{{ $item->jumlah_upah }}</td><td>{{ $item->status_pembayaran }}</td><td><a href="{{ route('admin.upah.edit', $item) }}">Edit</a>@if($item->status_pembayaran === 'belum_dibayar')<form method="post" action="{{ route('admin.upah.mark-paid', $item) }}">@csrf<button type="submit">Tandai dibayar</button></form>@endif</td></tr>@empty<tr><td colspan="5">Belum ada data upah.</td></tr>@endforelse</tbody></table>@endsection
