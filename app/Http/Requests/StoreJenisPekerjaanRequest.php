@@ -17,8 +17,6 @@ class StoreJenisPekerjaanRequest extends FormRequest
             'nama_pekerjaan' => ['required', 'string', 'max:255'],
             'deskripsi' => ['nullable', 'string'],
             'satuan' => ['nullable', 'string', 'max:100'],
-            'tarif_default' => ['nullable', 'numeric', 'min:0'],
-            'status_aktif' => ['boolean'],
         ];
     }
 }

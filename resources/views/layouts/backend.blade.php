@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SIMTANI — @yield('title')</title>
+<title>SIMTANI | @yield('title')</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
@@ -29,7 +29,7 @@
       @if (auth()->user()->role === 'admin')
         <a href="{{ route('admin.dashboard') }}" class="nav-item @if(request()->routeIs('admin.dashboard')) active @endif">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10"/></svg>
-          <span>Dashboard</span>
+          <span>Beranda</span>
         </a>
 
         <div class="nav-label">Kelola</div>
@@ -39,7 +39,7 @@
         </a>
         <a href="{{ route('admin.jenis-pekerjaan.index') }}" class="nav-item @if(request()->routeIs('admin.jenis-pekerjaan.*')) active @endif">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a3 3 0 1 1-4.4 4.1L4 17v3h3l6.6-6.6a3 3 0 1 1 4.1-4.4l3-2.7-2.3-2.3-2.7 3Z"/></svg>
-          <span>Kategori Pekerjaan</span>
+          <span>Jenis Pekerjaan</span>
         </a>
         <a href="{{ route('admin.jadwal.index') }}" class="nav-item @if(request()->routeIs('admin.jadwal.*')) active @endif">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>
@@ -61,11 +61,7 @@
         </a>
         <a href="{{ route('admin.permintaan-perubahan.index') }}" class="nav-item @if(request()->routeIs('admin.permintaan-perubahan.*')) active @endif">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-          <span>Permintaan Perubahan</span>
-        </a>
-        <a href="{{ route('admin.riwayat-tugas') }}" class="nav-item @if(request()->routeIs('admin.riwayat-tugas')) active @endif">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
-          <span>Riwayat Tugas</span>
+          <span>Permintaan Perubahan Tugas</span>
         </a>
         <a href="{{ route('admin.laporan.index') }}" class="nav-item @if(request()->routeIs('admin.laporan.*')) active @endif">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l5 5v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M9 12h6M9 16h6M9 8h3"/></svg>
@@ -80,7 +76,7 @@
       @else
         <a href="{{ route('anggota.dashboard') }}" class="nav-item @if(request()->routeIs('anggota.dashboard')) active @endif">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10"/></svg>
-          <span>Dashboard</span>
+          <span>Beranda</span>
         </a>
         <a href="{{ route('anggota.tugas.index') }}" class="nav-item @if(request()->routeIs('anggota.tugas.*')) active @endif">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>
@@ -100,7 +96,7 @@
         </a>
         <a href="{{ route('anggota.permintaan-perubahan.index') }}" class="nav-item @if(request()->routeIs('anggota.permintaan-perubahan.*')) active @endif">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-          <span>Permintaan Perubahan</span>
+          <span>Permintaan Perubahan Tugas</span>
         </a>
         <a href="{{ route('anggota.hubungi-admin') }}" class="nav-item @if(request()->routeIs('anggota.hubungi-admin')) active @endif">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
@@ -125,10 +121,10 @@
   <main id="main-content">
     <section class="view active">
       @if (session('success'))
-        <div class="banner-success">{{ session('success') }}</div>
+        <div class="banner-success" role="status">{{ session('success') }}</div>
       @endif
       @if ($errors->any())
-        <div class="banner-success" style="background:var(--amber-100);color:var(--amber-600)">
+        <div class="banner" role="alert">
           <ul style="margin:0;padding-left:16px">
             @foreach ($errors->all() as $error)
               <li>{{ $error }}</li>
@@ -142,5 +138,6 @@
 </div>
 
 <script src="{{ asset('js/script.js') }}"></script>
+@stack('scripts')
 </body>
 </html>

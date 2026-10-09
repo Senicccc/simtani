@@ -11,6 +11,7 @@ class Presensi extends Model
 
     protected $fillable = [
         'penugasan_id',
+        'tanggal',
         'waktu_check_in',
         'waktu_check_out',
         'status',
@@ -18,9 +19,22 @@ class Presensi extends Model
     ];
 
     protected $casts = [
+        'tanggal' => 'date',
         'waktu_check_in' => 'datetime',
         'waktu_check_out' => 'datetime',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (Presensi $presensi): void {
+            if (! $presensi->tanggal && $presensi->penugasan_id) {
+                $presensi->tanggal = Penugasan::query()
+                    ->with('jadwal')
+                    ->findOrFail($presensi->penugasan_id)
+                    ->tanggalMulaiEfektif();
+            }
+        });
+    }
 
     public function penugasan(): BelongsTo
     {

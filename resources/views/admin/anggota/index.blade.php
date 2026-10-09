@@ -38,7 +38,7 @@
           </td>
           <td>
             <a href="{{ route('admin.anggota.edit', $item) }}" class="table-action">Edit</a>
-            <form method="POST" action="{{ route('admin.anggota.destroy', $item) }}" style="display:inline" onsubmit="return confirm('Hapus permanen {{ $item->nama_lengkap }}? Cuma bisa kalau belum pernah dapat penugasan.')">
+            <form method="POST" action="{{ route('admin.anggota.destroy', $item) }}" style="display:inline" onsubmit="return confirm('Hapus permanen {{ $item->nama_lengkap }}? Anggota yang memiliki riwayat tugas tidak dapat dihapus.')">
               @csrf
               @method('DELETE')
               <button type="submit" class="table-action danger" style="background:none;border:none;padding:0;font:inherit;cursor:pointer">Hapus</button>

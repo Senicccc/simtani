@@ -16,10 +16,13 @@ class Jadwal extends Model
         'deskripsi',
         'lokasi',
         'tanggal',
+        'tanggal_selesai',
         'waktu_mulai',
         'waktu_selesai',
         'jumlah_orang_dibutuhkan',
         'jumlah_satuan',
+        'total_upah',
+        'perlu_verifikasi',
         'metode_penjadwalan',
         'status',
         'created_by',
@@ -27,7 +30,10 @@ class Jadwal extends Model
 
     protected $casts = [
         'tanggal' => 'date',
+        'tanggal_selesai' => 'date',
         'jumlah_satuan' => 'decimal:2',
+        'total_upah' => 'decimal:2',
+        'perlu_verifikasi' => 'boolean',
     ];
 
     public function jenisPekerjaan(): BelongsTo

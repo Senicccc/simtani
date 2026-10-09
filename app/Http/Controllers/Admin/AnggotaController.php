@@ -39,7 +39,7 @@ class AnggotaController extends Controller
             'email' => $request->email,
             'password' => bcrypt($request->password),
             'role' => 'anggota',
-            'status_aktif' => $request->boolean('status_aktif', true),
+            'status_aktif' => $request->has('status_aktif') ? $request->boolean('status_aktif') : true,
             'alamat' => $request->alamat,
         ]);
 
@@ -54,17 +54,14 @@ class AnggotaController extends Controller
     public function update(UpdateAnggotaRequest $request, User $anggota): RedirectResponse
     {
         $data = [
-            'nomor_anggota' => $request->nomor_anggota,
             'nama_lengkap' => $request->nama_lengkap,
             'nomor_wa' => $request->nomor_wa,
             'email' => $request->email,
-            'status_aktif' => $request->boolean('status_aktif', true),
+            'status_aktif' => array_key_exists('status_aktif', $request->validated())
+                ? $request->boolean('status_aktif')
+                : $anggota->status_aktif,
             'alamat' => $request->alamat,
         ];
-
-        if ($request->filled('password')) {
-            $data['password'] = bcrypt($request->password);
-        }
 
         $anggota->update($data);
 
@@ -75,7 +72,7 @@ class AnggotaController extends Controller
     {
         if ($anggota->penugasan()->exists()) {
             return redirect()->route('admin.anggota.index')
-                ->withErrors(['hapus' => 'Anggota "'.$anggota->nama_lengkap.'" punya riwayat penugasan dan tidak bisa dihapus permanen (data jadwal/presensi/upah terkait ikut bergantung). Gunakan Nonaktifkan lewat menu Edit.']);
+                ->withErrors(['hapus' => 'Anggota "'.$anggota->nama_lengkap.'" memiliki riwayat tugas dan tidak dapat dihapus. Nonaktifkan anggota melalui menu Edit agar riwayat tetap tersimpan.']);
         }
 
         $anggota->delete();

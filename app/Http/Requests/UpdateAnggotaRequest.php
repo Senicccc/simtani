@@ -15,11 +15,9 @@ class UpdateAnggotaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nomor_anggota' => ['required', 'string', Rule::unique('users', 'nomor_anggota')->ignore($this->route('anggota'))],
             'nama_lengkap' => ['required', 'string', 'max:255'],
             'nomor_wa' => ['nullable', 'string', 'max:30'],
             'email' => ['nullable', 'email', Rule::unique('users', 'email')->ignore($this->route('anggota'))],
-            'password' => ['nullable', 'string', 'min:6'],
             'status_aktif' => ['boolean'],
             'alamat' => ['nullable', 'string'],
         ];

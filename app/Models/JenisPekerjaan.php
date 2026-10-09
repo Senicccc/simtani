@@ -17,14 +17,7 @@ class JenisPekerjaan extends Model
         'nama_pekerjaan',
         'deskripsi',
         'satuan',
-        'tarif_default',
-        'status_aktif',
         'created_by',
-    ];
-
-    protected $casts = [
-        'tarif_default' => 'decimal:2',
-        'status_aktif' => 'boolean',
     ];
 
     public function kompetensi(): HasMany

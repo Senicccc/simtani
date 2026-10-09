@@ -29,8 +29,6 @@ class JenisPekerjaanController extends Controller
             'nama_pekerjaan' => $request->nama_pekerjaan,
             'deskripsi' => $request->deskripsi,
             'satuan' => $request->satuan,
-            'tarif_default' => $request->tarif_default,
-            'status_aktif' => $request->boolean('status_aktif', true),
             'created_by' => auth()->id(),
         ]);
 
@@ -48,10 +46,20 @@ class JenisPekerjaanController extends Controller
             'nama_pekerjaan' => $request->nama_pekerjaan,
             'deskripsi' => $request->deskripsi,
             'satuan' => $request->satuan,
-            'tarif_default' => $request->tarif_default,
-            'status_aktif' => $request->boolean('status_aktif', true),
         ]);
 
         return redirect()->route('admin.jenis-pekerjaan.index')->with('success', 'Jenis pekerjaan berhasil diperbarui.');
+    }
+
+    public function destroy(JenisPekerjaan $jenisPekerjaan): RedirectResponse
+    {
+        if ($jenisPekerjaan->jadwal()->exists() || $jenisPekerjaan->kompetensi()->exists()) {
+            return redirect()->route('admin.jenis-pekerjaan.index')
+                ->withErrors(['hapus' => 'Jenis pekerjaan tidak dapat dihapus karena masih digunakan pada jadwal atau kompetensi anggota.']);
+        }
+
+        $jenisPekerjaan->delete();
+
+        return redirect()->route('admin.jenis-pekerjaan.index')->with('success', 'Jenis pekerjaan berhasil dihapus.');
     }
 }

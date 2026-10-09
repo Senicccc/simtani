@@ -14,6 +14,7 @@ class PermintaanPerubahan extends Model
         'diajukan_oleh',
         'jenis_permintaan',
         'target_penugasan_id',
+        'target_jadwal_id',
         'alasan',
         'status',
         'diproses_oleh',
@@ -38,6 +39,11 @@ class PermintaanPerubahan extends Model
     public function targetPenugasan(): BelongsTo
     {
         return $this->belongsTo(Penugasan::class, 'target_penugasan_id');
+    }
+
+    public function targetJadwal(): BelongsTo
+    {
+        return $this->belongsTo(Jadwal::class, 'target_jadwal_id');
     }
 
     public function diprosesOleh(): BelongsTo

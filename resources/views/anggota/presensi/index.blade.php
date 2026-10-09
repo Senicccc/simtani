@@ -1,3 +1,24 @@
 @extends('layouts.backend')
 @section('title', 'Presensi Saya')
-@section('content')<h2>Presensi Saya</h2><table><thead><tr><th>Kegiatan</th><th>Check-in</th><th>Check-out</th><th>Status</th><th>Aksi</th></tr></thead><tbody>@forelse($penugasan as $assignment)<tr><td>{{ $assignment->jadwal->nama_kegiatan ?? '-' }}</td><td>{{ $assignment->presensi?->waktu_check_in ?? '-' }}</td><td>{{ $assignment->presensi?->waktu_check_out ?? '-' }}</td><td>{{ $assignment->presensi?->status ?? 'Belum diisi' }}</td><td>@if(!$assignment->presensi)<form method="post" action="{{ route('anggota.presensi.check-in', $assignment) }}">@csrf<button type="submit">Check-in</button></form>@elseif(!$assignment->presensi->waktu_check_out)<form method="post" action="{{ route('anggota.presensi.check-out', $assignment) }}">@csrf<button type="submit">Check-out</button></form>@endif</td></tr>@empty<tr><td colspan="5">Belum ada penugasan.</td></tr>@endforelse</tbody></table>@endsection
+@section('content')
+<h2>Riwayat Kehadiran</h2>
+<p>Kehadiran dan izin dicatat terpisah untuk setiap tanggal kegiatan.</p>
+<div class="table-scroll">
+  <table>
+    <thead><tr><th>Kegiatan</th><th>Mulai</th><th>Selesai</th><th>Status</th><th>Tugas</th></tr></thead>
+    <tbody>
+      @forelse($presensi as $item)
+        <tr>
+          <td>{{ $item->penugasan->jadwal->nama_kegiatan ?? '-' }}</td>
+          <td>{{ $item->waktu_check_in?->format('d-m-Y H:i') ?? '-' }}</td>
+          <td>{{ $item->waktu_check_out?->format('d-m-Y H:i') ?? '-' }}</td>
+          <td>{{ $item->tanggal->format('d-m-Y') }} · {{ ['hadir' => 'Hadir', 'izin' => 'Izin', 'tidak_hadir' => 'Tidak hadir'][$item->status] ?? $item->status }}</td>
+          <td><a href="{{ route('anggota.tugas.show', $item->penugasan) }}">Buka tugas</a></td>
+        </tr>
+      @empty
+        <tr><td colspan="5">Belum ada penugasan.</td></tr>
+      @endforelse
+    </tbody>
+  </table>
+</div>
+@endsection

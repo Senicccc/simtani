@@ -18,7 +18,7 @@
 </div>
 
 <div class="field">
-  <label for="password">Password</label>
+  <label for="password">Kata sandi</label>
   <input id="password" name="password" type="password" placeholder="{{ $anggota ? 'Kosongkan jika tidak diubah' : '' }}" {{ $anggota ? '' : 'required' }}>
 </div>
 

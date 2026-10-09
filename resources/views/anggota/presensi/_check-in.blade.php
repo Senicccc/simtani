@@ -1,1 +1,1 @@
-<form method="post" action="{{ route('anggota.presensi.check-in', $penugasan) }}">@csrf<button type="submit">Check-in</button></form>
+<form method="post" action="{{ route('anggota.tugas.mulai', $penugasan) }}">@csrf<button type="submit">Mulai tugas dan catat hadir</button></form>

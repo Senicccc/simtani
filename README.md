@@ -1,79 +1,147 @@
 # SIMTANI
 
-SIMTANI adalah aplikasi Laravel untuk mengelola anggota, kegiatan pertanian, penugasan, presensi, upah, dan laporan.
+SIMTANI is a Laravel application for managing agricultural workers, work schedules, assignments, attendance, wages, change requests, and operational reports.
 
-## Menjalankan aplikasi
+## Requirements
+
+- PHP and Composer
+- MySQL
+- Node.js and npm for frontend asset development
+
+## Local setup with Laragon
+
+Each developer should use a separate local database. After pulling the latest project changes:
+
+1. Start MySQL in Laragon.
+2. Create a database named `simtani` in phpMyAdmin, or run:
+
+   ```sql
+   CREATE DATABASE IF NOT EXISTS simtani
+     CHARACTER SET utf8mb4
+     COLLATE utf8mb4_unicode_ci;
+   ```
+
+3. Configure the database connection in `.env`. If the file already exists, update only the database settings and retain the other configuration:
+
+   ```dotenv
+   DB_CONNECTION=mysql
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_DATABASE=simtani
+   DB_USERNAME=root
+   DB_PASSWORD=
+   ```
+
+4. From the project directory, install PHP dependencies and apply migrations with demo data:
+
+   ```bash
+   composer install
+   php artisan config:clear
+   php artisan migrate --seed
+   ```
+
+   Migrations apply schema changes that have not yet been run. The seeder creates or updates the SIMTANI sample records. You can run this command again after pulling new migrations or seeder changes.
+
+5. If `.env` does not exist, copy `.env.example` to `.env`. Generate an application key only for a new installation that does not already have one:
+
+   ```bash
+   php artisan key:generate
+   ```
+
+6. Start the application:
+
+   ```bash
+   php artisan serve
+   ```
+
+### Database synchronization for team members
+
+- Run `php artisan migrate --seed` if your local database is missing the latest schema or sample data.
+- No database action is required for frontend-only changes if your local schema is already up to date.
+- Laravel runs only migrations that have not already been applied.
+- Keep a separate local `simtani` database for each developer. Do not use a production or shared database for local development.
+- Do not use `php artisan migrate:fresh` for routine synchronization; it drops every table and all data in the active database.
+
+## Demo accounts
+
+| Role | Email | Password |
+|---|---|---|
+| Administrator | `admin.david@simtani.local` | `david12345` |
+| Member | `dedi.prasetyo@simtani.local` | `anggota123` |
+
+The seeder also creates active and inactive members, job categories, schedules, assignments, attendance, wages, and related change requests. These accounts and records are for local development and demonstrations only.
+
+### Refreshing demo data
+
+To create or update sample records without dropping the database:
 
 ```bash
-composer install
-copy .env.example .env
-php artisan key:generate
-php artisan migrate
-php artisan serve
+php artisan db:seed
 ```
 
-Untuk frontend:
+The seeder uses `updateOrCreate`, so existing sample records are updated and unrelated records are not deleted.
+
+To drop all tables in the active database, rerun migrations, and seed sample data from scratch:
+
+```bash
+php artisan migrate:fresh --seed
+```
+
+**Warning:** `migrate:fresh` permanently deletes every table and all data in the active database. Use it only with a disposable local or demo database. Confirm that `.env` points to your local `simtani` database and back up any data you need to keep. Never run it against a production or shared database.
+
+## Frontend development
+
+The application uses Laravel Blade views and assets in `public/`. To install and run Vite during frontend development:
 
 ```bash
 npm install
 npm run dev
 ```
 
-## Fitur yang tersedia
+### Frontend handoff notes
 
-### Admin
+The core workflows are available in the application. The following items are recommended for further UI review and refinement; they do not imply that the underlying workflows are missing:
 
-- Dashboard admin.
-- CRUD jadwal/kegiatan dengan kategori pekerjaan, lokasi, tanggal, waktu, kebutuhan anggota, dan jumlah satuan.
-- CRUD kategori pekerjaan untuk kebutuhan desa seperti pemupukan, berkebun, atau ternak.
-- Tambah anggota dengan nomor anggota otomatis.
-- Status anggota aktif dan nonaktif, termasuk filter daftar anggota.
-- Penugasan manual tanpa validasi kompetensi.
-- Detail penugasan dikelompokkan per kegiatan dan menampilkan seluruh anggota.
-- Keluarkan anggota dari kegiatan dengan pilihan mengganti anggota atau membiarkan slot kosong.
-- Ubah anggota, status tugas, dan catatan penugasan.
-- Verifikasi tugas yang sudah dikirim anggota.
-- Lihat presensi anggota secara read-only.
-- Kelola upah, status pembayaran, metode pembayaran, dan penanda pembayaran.
-- Waktu dan tanggal pembayaran dicatat otomatis oleh server saat pembayaran ditandai lunas.
-- Laporan dengan filter tanggal, kategori, nama jadwal, anggota/penugasan, dan daftar kegiatan.
-- Halaman laporan siap dicetak atau disimpan sebagai PDF melalui browser.
+- Review the layout on mobile and desktop, particularly the schedule, assignment, attendance, and wage tables. Keep key information and actions accessible on narrow screens.
+- Refine button hierarchy and wording on task details. Members should be able to review task information before acting, with separate check-in and check-out actions and confirmation before each action.
+- Review schedule, assignment, attendance, change-request, and payment status labels. Present clear user-facing wording rather than internal values such as `in_progress` or `belum_dibayar`.
+- Make leave and absence flows easy to understand, including the affected date, leave reason, and how administrators fill staffing gaps.
+- Ensure administrator dashboard cards use clear labels and link to lists filtered to the corresponding status.
+- Review empty states, validation errors, and success or failure messages. Check keyboard focus, form labels, contrast, and touch target sizes for accessibility.
+- Coordinate any proposed business-rule or backend workflow changes before implementing them as frontend changes.
 
-### Anggota
+## Assignment lifecycle
 
-- Dashboard anggota.
-- Melihat tugas yang diberikan dan detail anggota satu kegiatan.
-- Mengubah status tugas menjadi `in_progress` melalui tombol Mulai tugas.
-- Mengirim tugas selesai untuk menunggu verifikasi admin.
-- Mengisi presensi `hadir`, `izin`, atau `tidak_hadir`, serta check-out.
-- Melihat riwayat tugas dan upah beserta waktu pembayaran.
-- Mengajukan permintaan perubahan penugasan.
-- Menghubungi admin melalui WhatsApp atau email.
+1. `assigned`: the member has been assigned to the work.
+2. `in_progress`: the member has started the work.
+3. `waiting_verification`: the member has submitted a completion report.
+4. `completed`: an administrator has verified the work. Wages are generated by dividing the schedule's total wage equally among its members once the completion and verification requirements are met.
 
-## Status penugasan
+Attendance is recorded against an assignment for each work date. Leave and absence are recorded separately; administrators can assign a replacement when daily attendance falls below the required staffing level.
 
-Alur normal penugasan adalah:
+## Features
 
-1. `assigned`: anggota sudah ditugaskan.
-2. `in_progress`: anggota menekan Mulai tugas.
-3. `waiting_verification`: anggota mengirim laporan selesai.
-4. `completed`: admin memeriksa dan menekan Verifikasi selesai.
+### Administrator
 
-Admin dapat mengeluarkan anggota. Data lama disimpan sebagai `cancelled`; jika ada pengganti, sistem membuat penugasan baru untuk anggota tersebut.
+- Manage active and inactive members, job categories, schedules, and assignments.
+- Generate assignments based on member skills, schedule conflicts, and workload, or fill available positions manually.
+- Review attendance and completion reports, verify work, and manage wages and payment status.
+- Review assignment change and objection requests.
+- Filter operational reports by schedules, assignments, attendance, and wages; export CSV or print/save as PDF.
+- Review dashboard summaries for schedule status, pending verification, staffing gaps, change requests, and unpaid wages.
 
-## Fitur untuk frontend yang masih coming soon
+### Member
 
-Route berikut sudah tersedia untuk integrasi frontend, tetapi UI utamanya masih bertanda `Coming soon`:
+- View assigned work, schedule details, and other members assigned to the same activity.
+- Start work, record daily attendance, check in and out, and submit a completion report.
+- View wages after the applicable completion and verification requirements are met, along with payment status.
+- Submit and track assignment change requests.
+- Contact administrators by WhatsApp or email when contact details are available.
 
-- Penjadwalan otomatis: `POST /admin/jadwal/{jadwal}/generate`, route `admin.jadwal.generate`.
-- Halaman penugasan otomatis: `GET /admin/jadwal/{jadwal}/penugasan`, route `admin.jadwal.penugasan`.
+## Tests
 
-Penjadwalan otomatis menggunakan `AutoScheduleService` dan dapat dikembangkan lebih lanjut untuk aturan pemerataan beban kerja.
-
-## Pengujian
+Run the application test suite with:
 
 ```bash
 php artisan test
 ```
-"# simtani" 
-# simtani

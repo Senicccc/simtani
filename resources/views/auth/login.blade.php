@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SIMTANI — Login</title>
+<title>SIMTANI | Masuk</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
@@ -14,7 +14,7 @@
     <div class="login-brand">
       <div class="mark"><img src="{{ asset('images/Logo.jpg') }}" alt="Logo SIMTANI"></div>
       <h1>SIMTANI</h1>
-      <p>Kelola kelompok tani lebih rapi &amp; adil — jadwal, presensi, dan upah dalam satu sistem.</p>
+      <p>Kelola kegiatan kelompok tani, jadwal, presensi, dan pembayaran upah dalam satu tempat.</p>
     </div>
     <div class="login-form">
       <h2>Masuk ke akun</h2>
@@ -26,8 +26,8 @@
       <form method="POST" action="{{ route('login.submit') }}">
         @csrf
         <div class="field">
-          <label for="login">Email atau No. anggota</label>
-          <input id="login" name="login" type="text" value="{{ old('login') }}" placeholder="Contoh: 2024001" required autofocus>
+          <label for="login">Email atau nomor anggota</label>
+          <input id="login" name="login" type="text" value="{{ old('login') }}" placeholder="Masukkan email atau nomor anggota" required autofocus>
         </div>
         <div class="field">
           <label for="password">Kata sandi</label>

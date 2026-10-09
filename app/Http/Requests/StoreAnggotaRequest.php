@@ -2,15 +2,19 @@
 
 namespace App\Http\Requests;
 
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Str;
 
 class StoreAnggotaRequest extends FormRequest
 {
     protected function prepareForValidation(): void
     {
         if (! $this->filled('nomor_anggota')) {
-            $this->merge(['nomor_anggota' => 'ANG-'.Str::upper(Str::random(8))]);
+            do {
+                $memberNumber = 'ANG-'.strtoupper(bin2hex(random_bytes(4)));
+            } while (User::where('nomor_anggota', $memberNumber)->exists());
+
+            $this->merge(['nomor_anggota' => $memberNumber]);
         }
     }
 

@@ -35,7 +35,7 @@ class AuthController extends Controller
         })->first();
 
         if (! $user || ! Auth::attempt($credentials, $request->boolean('remember'))) {
-            return back()->withErrors(['login' => 'Kredensial tidak valid.'])->withInput();
+            return back()->withErrors(['login' => 'Email, nomor anggota, atau kata sandi tidak sesuai.'])->withInput();
         }
 
         $request->session()->regenerate();

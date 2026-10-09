@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Anggota;
 
 use App\Http\Controllers\Controller;
+use App\Models\Jadwal;
 use App\Models\Penugasan;
 use App\Models\PermintaanPerubahan;
+use App\Services\AvailableScheduleService;
+use App\Services\ScheduleConflictService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,7 +17,7 @@ class PermintaanPerubahanController extends Controller
 {
     public function index(): View
     {
-        $permintaan = PermintaanPerubahan::with(['penugasan.jadwal', 'targetPenugasan.jadwal'])
+        $permintaan = PermintaanPerubahan::with(['penugasan.jadwal', 'targetJadwal', 'targetPenugasan.jadwal', 'targetPenugasan.anggota', 'diprosesOleh'])
             ->where('diajukan_oleh', Auth::id())
             ->orderByDesc('created_at')
             ->get();
@@ -22,33 +25,63 @@ class PermintaanPerubahanController extends Controller
         return view('anggota.permintaan-perubahan.index', compact('permintaan'));
     }
 
-    public function create(): View
+    public function create(AvailableScheduleService $availableSchedules, ScheduleConflictService $conflicts): View
     {
         $penugasan = Penugasan::with(['jadwal.jenisPekerjaan'])
             ->where('anggota_id', Auth::id())
-            ->where('status', '!=', 'completed')
+            ->where('status', 'assigned')
             ->get();
+        $availableTargets = collect();
+        $member = Auth::user();
 
-        return view('anggota.permintaan-perubahan.create', compact('penugasan'));
+        foreach ($penugasan as $assignment) {
+            foreach ($availableSchedules->forMember($member, $assignment->jadwal_id, $conflicts) as $schedule) {
+                $availableTargets->push([
+                    'assignment_id' => $assignment->id,
+                    'schedule' => $schedule,
+                ]);
+            }
+        }
+        $availableTargets = $availableTargets->unique(fn (array $target): string => $target['assignment_id'].':'.$target['schedule']->id)->values();
+
+        return view('anggota.permintaan-perubahan.create', compact('penugasan', 'availableTargets'));
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, AvailableScheduleService $availableSchedules, ScheduleConflictService $conflicts): RedirectResponse
     {
         $validated = $request->validate([
             'penugasan_id' => ['required', 'exists:penugasan,id'],
             'jenis_permintaan' => ['required', 'in:tukar,sanggah'],
-            'target_penugasan_id' => ['nullable', 'exists:penugasan,id'],
-            'alasan' => ['required', 'string'],
+            'target_jadwal_id' => ['required_if:jenis_permintaan,tukar', 'nullable', 'exists:jadwal,id'],
+            'alasan' => ['required', 'string', 'max:2000'],
         ]);
-
-        $penugasan = Penugasan::findOrFail($validated['penugasan_id']);
+        $penugasan = Penugasan::with('jadwal')->findOrFail($validated['penugasan_id']);
         abort_unless($penugasan->anggota_id === Auth::id(), 403);
+        if ($penugasan->status !== 'assigned') {
+            return back()->withInput()->withErrors(['penugasan_id' => 'Permintaan hanya dapat diajukan untuk tugas yang belum dimulai.']);
+        }
+        if (! Auth::user()->status_aktif) {
+            return back()->withInput()->withErrors(['penugasan_id' => 'Akun anggota tidak aktif. Hubungi admin.']);
+        }
+
+        $targetSchedule = isset($validated['target_jadwal_id'])
+            ? Jadwal::with(['jenisPekerjaan', 'penugasan'])->findOrFail($validated['target_jadwal_id'])
+            : null;
+        if ($targetSchedule && ! $availableSchedules->isAvailable(Auth::user(), $targetSchedule, $penugasan->jadwal_id, $conflicts)) {
+            return back()->withInput()->withErrors(['target_jadwal_id' => 'Jadwal tujuan tidak tersedia atau tidak sesuai kompetensi dan waktu. Pilih jadwal lain.']);
+        }
+
+        if (PermintaanPerubahan::where('penugasan_id', $penugasan->id)
+            ->where('status', 'pending')
+            ->exists()) {
+            return back()->withInput()->withErrors(['penugasan_id' => 'Permintaan untuk tugas ini masih menunggu keputusan admin.']);
+        }
 
         PermintaanPerubahan::create([
             'penugasan_id' => $penugasan->id,
             'diajukan_oleh' => Auth::id(),
             'jenis_permintaan' => $validated['jenis_permintaan'],
-            'target_penugasan_id' => $validated['target_penugasan_id'] ?? null,
+            'target_jadwal_id' => $targetSchedule?->id,
             'alasan' => $validated['alasan'],
             'status' => 'pending',
         ]);

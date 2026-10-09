@@ -4,17 +4,32 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateUpahRequest;
+use App\Models\Jadwal;
+use App\Models\Penugasan;
 use App\Models\Upah;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class UpahController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
-        $upah = Upah::with(['penugasan.anggota', 'penugasan.jadwal.jenisPekerjaan'])->orderByDesc('created_at')->get();
+        $upah = Upah::with(['penugasan.anggota', 'penugasan.jadwal.jenisPekerjaan', 'penugasan.presensi'])
+            ->when(in_array($request->input('status_pembayaran'), ['belum_dibayar', 'sudah_dibayar'], true), fn ($query) => $query->where('status_pembayaran', $request->input('status_pembayaran')))
+            ->when($request->filled('jadwal_id'), fn ($query) => $query->whereHas('penugasan', fn ($assignment) => $assignment->where('jadwal_id', $request->integer('jadwal_id'))))
+            ->orderByDesc('created_at')
+            ->get();
+        $menungguVerifikasi = Penugasan::with(['anggota', 'jadwal'])
+            ->where('status', 'waiting_verification')
+            ->when($request->filled('jadwal_id'), fn ($query) => $query->where('jadwal_id', $request->integer('jadwal_id')))
+            ->orderByDesc('completed_at')
+            ->get();
+        $selectedSchedule = $request->filled('jadwal_id')
+            ? Jadwal::find($request->integer('jadwal_id'))
+            : null;
 
-        return view('admin.upah.index', compact('upah'));
+        return view('admin.upah.index', compact('upah', 'menungguVerifikasi', 'selectedSchedule'));
     }
 
     public function edit(Upah $upah): View
@@ -27,10 +42,6 @@ class UpahController extends Controller
         $isPaid = $request->status_pembayaran === 'sudah_dibayar';
         $paidAt = $isPaid ? now() : null;
         $upah->update([
-            'mode_perhitungan' => $request->mode_perhitungan,
-            'tarif_per_satuan' => $request->tarif_per_satuan,
-            'jumlah_satuan' => $request->jumlah_satuan,
-            'jumlah_upah' => $request->jumlah_upah,
             'status_pembayaran' => $request->status_pembayaran,
             'metode_pembayaran' => $request->metode_pembayaran,
             'tanggal_pembayaran' => $paidAt?->toDateString(),

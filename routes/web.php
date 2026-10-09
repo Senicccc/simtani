@@ -46,15 +46,19 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/jenis-pekerjaan', [JenisPekerjaanController::class, 'store'])->name('jenis-pekerjaan.store');
         Route::get('/jenis-pekerjaan/{jenisPekerjaan}/edit', [JenisPekerjaanController::class, 'edit'])->name('jenis-pekerjaan.edit');
         Route::put('/jenis-pekerjaan/{jenisPekerjaan}', [JenisPekerjaanController::class, 'update'])->name('jenis-pekerjaan.update');
+        Route::delete('/jenis-pekerjaan/{jenisPekerjaan}', [JenisPekerjaanController::class, 'destroy'])->name('jenis-pekerjaan.destroy');
 
         Route::get('/jadwal', [JadwalController::class, 'index'])->name('jadwal.index');
         Route::get('/jadwal/create', [JadwalController::class, 'create'])->name('jadwal.create');
         Route::post('/jadwal', [JadwalController::class, 'store'])->name('jadwal.store');
+        Route::delete('/jadwal/{jadwal}', [JadwalController::class, 'destroy'])->name('jadwal.destroy');
+        Route::get('/jadwal/{jadwal}/auto-preview', [JadwalController::class, 'autoPreview'])->name('jadwal.auto-preview');
         Route::get('/jadwal/{jadwal}', [JadwalController::class, 'show'])->name('jadwal.show');
         Route::get('/jadwal/{jadwal}/edit', [JadwalController::class, 'edit'])->name('jadwal.edit');
         Route::put('/jadwal/{jadwal}', [JadwalController::class, 'update'])->name('jadwal.update');
         Route::post('/jadwal/{jadwal}/generate', [JadwalController::class, 'generate'])->name('jadwal.generate');
         Route::get('/jadwal/{jadwal}/penugasan', [JadwalController::class, 'penugasan'])->name('jadwal.penugasan');
+        Route::post('/jadwal/{jadwal}/pengganti-harian', [PenugasanController::class, 'replaceForDate'])->name('jadwal.pengganti-harian');
 
         Route::get('/penugasan', [PenugasanController::class, 'index'])->name('penugasan.index');
         Route::get('/penugasan/create', [PenugasanController::class, 'create'])->name('penugasan.create');
@@ -76,11 +80,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/permintaan-perubahan/{permintaan}', [AdminPermintaanPerubahanController::class, 'show'])->name('permintaan-perubahan.show');
         Route::post('/permintaan-perubahan/{permintaan}/process', [AdminPermintaanPerubahanController::class, 'process'])->name('permintaan-perubahan.process');
 
-        Route::get('/riwayat-tugas', function () {
-            return view('admin.riwayat-tugas');
-        })->name('riwayat-tugas');
-
         Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');
+        Route::get('/laporan/export/csv', [LaporanController::class, 'exportCsv'])->name('laporan.export.csv');
         Route::get('/laporan/export', [LaporanController::class, 'export'])->name('laporan.export');
 
         Route::get('/profil', [ProfilController::class, 'admin'])->name('profil');
@@ -93,14 +94,13 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/tugas', [TugasController::class, 'index'])->name('tugas.index');
         Route::get('/tugas/{penugasan}', [TugasController::class, 'show'])->name('tugas.show');
         Route::post('/tugas/{penugasan}/mulai', [TugasController::class, 'mulai'])->name('tugas.mulai');
+        Route::post('/tugas/{penugasan}/check-out', [TugasController::class, 'checkOut'])->name('tugas.check-out');
         Route::get('/tugas/{penugasan}/selesai', [TugasController::class, 'showComplete'])->name('tugas.complete.form');
         Route::post('/tugas/{penugasan}/selesai', [TugasController::class, 'complete'])->name('tugas.complete');
 
         Route::get('/riwayat-tugas', [TugasController::class, 'riwayat'])->name('riwayat-tugas');
 
         Route::get('/presensi', [AnggotaPresensiController::class, 'index'])->name('presensi.index');
-        Route::post('/presensi/{penugasan}/check-in', [AnggotaPresensiController::class, 'checkIn'])->name('presensi.check-in');
-        Route::post('/presensi/{penugasan}/check-out', [AnggotaPresensiController::class, 'checkOut'])->name('presensi.check-out');
         Route::post('/presensi/{penugasan}/status', [AnggotaPresensiController::class, 'setStatus'])->name('presensi.status');
 
         Route::get('/hubungi-admin', [TugasController::class, 'contactAdmin'])->name('hubungi-admin');

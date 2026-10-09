@@ -5,80 +5,64 @@ namespace App\Http\Controllers\Anggota;
 use App\Http\Controllers\Controller;
 use App\Models\Penugasan;
 use App\Models\Presensi;
+use App\Services\JadwalStatusService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use RuntimeException;
 
 class PresensiController extends Controller
 {
     public function index(): View
     {
-        $penugasan = Penugasan::with(['jadwal', 'presensi'])
-            ->where('anggota_id', Auth::id())
-            ->where('status', '!=', 'cancelled')
-            ->orderByDesc('assigned_at')->get();
         $presensi = Presensi::with(['penugasan.jadwal.jenisPekerjaan', 'penugasan.anggota'])
             ->whereHas('penugasan', fn ($query) => $query->where('anggota_id', Auth::id()))
             ->orderByDesc('created_at')
             ->get();
 
-        return view('anggota.presensi.index', compact('presensi', 'penugasan'));
+        return view('anggota.presensi.index', compact('presensi'));
     }
 
-    public function checkIn(Penugasan $penugasan): RedirectResponse
+    public function setStatus(Request $request, Penugasan $penugasan, JadwalStatusService $statuses): RedirectResponse
     {
         abort_unless($penugasan->anggota_id === Auth::id(), 403);
-
-        if ($penugasan->presensi()->exists()) {
-            return back()->withErrors(['presensi' => 'Presensi sudah dibuat untuk tugas ini.']);
-        }
-
-        Presensi::create([
-            'penugasan_id' => $penugasan->id,
-            'waktu_check_in' => now(),
-            'status' => 'hadir',
+        $validated = $request->validate([
+            'tanggal' => ['required', 'date', 'after_or_equal:today'],
+            'status' => ['required', 'in:izin,tidak_hadir'],
+            'catatan' => ['required_if:status,izin', 'nullable', 'string', 'max:1000'],
         ]);
-
-        return redirect()->route('anggota.presensi.index')->with('success', 'Check-in berhasil dicatat.');
-    }
-
-    public function setStatus(Request $request, Penugasan $penugasan): RedirectResponse
-    {
-        abort_unless($penugasan->anggota_id === Auth::id(), 403);
-        $validated = $request->validate(['status' => ['required', 'in:hadir,izin,tidak_hadir']]);
-
-        if ($penugasan->presensi()->exists()) {
-            return back()->withErrors(['presensi' => 'Presensi sudah dibuat untuk tugas ini.']);
+        $date = Carbon::parse($validated['tanggal']);
+        if ($date->lt($penugasan->tanggalMulaiEfektif()) || $date->gt($penugasan->tanggalSelesaiEfektif())) {
+            return back()->withInput()->withErrors(['tanggal' => 'Pilih tanggal dalam rentang penugasan.']);
         }
 
-        Presensi::create([
-            'penugasan_id' => $penugasan->id,
-            'waktu_check_in' => $validated['status'] === 'hadir' ? now() : null,
-            'status' => $validated['status'],
-        ]);
+        try {
+            DB::transaction(function () use ($penugasan, $validated, $date, $statuses): void {
+                $assignment = Penugasan::query()->lockForUpdate()->findOrFail($penugasan->id);
+                if (! in_array($assignment->status, ['assigned', 'in_progress'], true)) {
+                    throw new RuntimeException('Status presensi hanya dapat dicatat untuk tugas yang masih aktif.');
+                }
 
-        return redirect()->route('anggota.tugas.show', $penugasan)->with('success', 'Status presensi berhasil dicatat.');
-    }
+                if ($assignment->presensiHarian()->whereDate('tanggal', $date->toDateString())->exists()) {
+                    throw new RuntimeException('Presensi untuk tanggal ini sudah dicatat.');
+                }
 
-    public function checkOut(Penugasan $penugasan): RedirectResponse
-    {
-        abort_unless($penugasan->anggota_id === Auth::id(), 403);
-
-        $presensi = $penugasan->presensi;
-        if (! $presensi) {
-            return back()->withErrors(['presensi' => 'Belum ada check-in untuk tugas ini.']);
+                Presensi::create([
+                    'penugasan_id' => $assignment->id,
+                    'tanggal' => $date->toDateString(),
+                    'waktu_check_in' => null,
+                    'status' => $validated['status'],
+                    'catatan' => $validated['catatan'] ?? null,
+                ]);
+                $statuses->refresh($assignment->jadwal);
+            });
+        } catch (RuntimeException $exception) {
+            return back()->withInput()->withErrors(['presensi' => $exception->getMessage()]);
         }
 
-        if ($presensi->waktu_check_out) {
-            return back()->withErrors(['presensi' => 'Check-out sudah dicatat.']);
-        }
-
-        $presensi->update([
-            'waktu_check_out' => now(),
-            'status' => 'hadir',
-        ]);
-
-        return redirect()->route('anggota.presensi.index')->with('success', 'Check-out berhasil dicatat.');
+        return redirect()->route('anggota.tugas.show', $penugasan)->with('success', 'Presensi tanggal '.$date->format('d-m-Y').' berhasil dicatat.');
     }
 }
