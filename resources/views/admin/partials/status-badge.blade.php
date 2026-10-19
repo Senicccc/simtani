@@ -14,7 +14,22 @@
       'completed'            => ['Selesai', 'badge'],
       'cancelled'            => ['Dibatalkan', 'badge-danger'],
     ],
+    'presensi' => [
+      'hadir'       => ['Hadir', 'badge'],
+      'izin'        => ['Izin', 'badge-warn'],
+      'tidak_hadir' => ['Tidak hadir', 'badge-danger'],
+      'belum'       => ['Belum dicatat', 'badge-muted'],
+    ],
+    'bayar' => [
+      'sudah_dibayar' => ['Sudah dibayar', 'badge'],
+      'belum_dibayar' => ['Belum dibayar', 'badge-warn'],
+    ],
+        'permintaan' => [
+      'pending'  => ['Menunggu diproses', 'badge-warn'],
+      'approved' => ['Disetujui', 'badge'],
+      'rejected' => ['Ditolak', 'badge-danger'],
+    ],
   ];
-  [$label, $class] = $maps[$type][$status] ?? [$status, 'badge-muted'];
+  [$label, $class] = $maps[$type][$status] ?? [ucfirst(str_replace('_', ' ', (string) $status)), 'badge-muted'];
 @endphp
 <span class="{{ $class }}">{{ $label }}</span>

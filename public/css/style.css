@@ -425,3 +425,42 @@ button.table-action{background:none;border:0;font:inherit;font-size:12px;cursor:
 @media (max-width:520px){
   .panel-body{padding:18px 16px}
 }
+
+/* ---------- LAPORAN ---------- */
+.panel+.stat-row{margin-top:16px}
+.filter-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:0 14px;align-items:end}
+.filter-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}
+.filter-actions .btn-primary{width:auto;padding:10px 18px}
+.filter-actions .btn-outline{padding:10px 16px}
+
+/* ---------- PENUGASAN ---------- */
+.muted{color:var(--text-muted)}
+.field-label{display:block;margin-bottom:5px;font-size:12px;color:var(--text-muted)}
+.inline-label{font-size:12px;color:var(--text-muted)}
+.detail-link{display:block;width:fit-content;margin-top:4px;font-size:12px;color:var(--green-600)}
+.detail-link:hover{text-decoration:underline}
+
+.btn-danger{display:inline-flex;align-items:center;justify-content:center;padding:8px 14px;border:1px solid #b3261e;border-radius:8px;background:transparent;color:#b3261e;font:inherit;font-size:13px;cursor:pointer;transition:background .15s var(--ease)}
+.btn-danger:hover{background:#fbe9e6}
+
+.member-list{display:grid;gap:6px;margin:0;padding:0;list-style:none}
+.member-list li{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px}
+.member-list a{font-weight:500;color:var(--green-900)}
+.member-list a:hover{text-decoration:underline}
+
+.section-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin:28px 0 10px}
+.section-head h3{margin:0}
+
+.member-card.is-current{border-color:var(--green-600)}
+.member-card__head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:16px 20px 0}
+.member-card .detail-grid{padding:14px 20px 18px}
+.member-card__actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;padding:14px 20px;border-top:1px solid var(--line-soft);background:#f7faf7;border-radius:0 0 var(--radius) var(--radius)}
+.member-card__actions form{margin:0}
+.member-card__actions .btn-primary{width:auto;padding:8px 14px;font-size:13px}
+
+/* ---------- PERMINTAAN PERUBAHAN TUGAS ---------- */
+.cell-reason{max-width:340px;line-height:1.45}
+.detail-grid .span-all{grid-column:1/-1}
+.detail-grid dd a{font-weight:500;color:var(--green-600)}
+.detail-grid dd a:hover{text-decoration:underline}
+.form-actions+.note{margin:10px 0 0}
