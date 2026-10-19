@@ -25,6 +25,9 @@ body{
 h1,h2,.brand,.mobile-topbar-brand{font-family:'Fraunces',serif}
 [hidden]{display:none !important}
 button{font-family:inherit}
+a{color:inherit;text-decoration:none}
+h3,h4{font-family:'Fraunces',serif;color:var(--green-900);font-weight:600}
+h3{font-size:16px}
 a,button,input,select,textarea{touch-action:manipulation}
 :focus-visible{outline:3px solid #a8720f;outline-offset:3px}
 
@@ -146,15 +149,16 @@ a,button,input,select,textarea{touch-action:manipulation}
   border-right:1px solid var(--line);
   padding:22px 14px;
   display:flex;flex-direction:column;
+  position:sticky;top:0;height:100vh;overflow-y:auto;align-self:flex-start;
   transition:transform .3s var(--ease);
 }
 .sidebar .brand{font-size:15px;font-weight:600;margin-bottom:22px;padding:0 8px;color:var(--green-900);display:flex;align-items:center;gap:9px}
 .brand-logo{width:24px;height:24px;border-radius:50%;object-fit:cover;flex-shrink:0;box-shadow:var(--shadow-sm)}
 .nav-item{
   display:flex;align-items:center;gap:10px;width:100%;text-align:left;
-  padding:9px 11px;margin-bottom:3px;
+  padding:8px 11px;margin-bottom:2px;
   border:none;background:transparent;border-radius:8px;
-  font-size:14px;color:var(--green-900);cursor:pointer;
+  font-size:14px;color:var(--green-900);cursor:pointer;text-decoration:none;
   transition:background .15s var(--ease), color .15s var(--ease);
 }
 .nav-item svg{flex-shrink:0;opacity:.75;transition:opacity .15s var(--ease)}
@@ -163,7 +167,7 @@ a,button,input,select,textarea{touch-action:manipulation}
 .nav-item.active svg{opacity:1}
 .nav-label{
   font-size:10px;text-transform:uppercase;letter-spacing:.04em;
-  color:var(--text-muted);margin:16px 11px 6px;font-weight:600;
+  color:var(--text-muted);margin:14px 11px 4px;font-weight:600;
 }
 .logout{
   margin-top:auto;
@@ -184,6 +188,7 @@ main{flex:1;padding:32px 36px;min-width:0}
   padding:8px 14px;border:1px solid var(--green-600);background:var(--bg);
   color:var(--green-900);
   border-radius:8px;font-size:13px;cursor:pointer;
+  display:inline-flex;align-items:center;text-decoration:none;
   transition:background .15s var(--ease), transform .1s var(--ease);
 }
 .btn-outline:hover{background:var(--green-100)}
@@ -197,6 +202,7 @@ main{flex:1;padding:32px 36px;min-width:0}
 .stat-card{
   border:1px solid var(--line);border-radius:var(--radius);
   padding:16px;background:var(--green-100);
+  display:block;color:inherit;text-decoration:none;
   transition:box-shadow .2s var(--ease), transform .2s var(--ease);
 }
 .attendance-today,.member-task-card{margin-bottom:16px;background:#fff}
@@ -218,9 +224,10 @@ main{flex:1;padding:32px 36px;min-width:0}
 .daily-attendance h4{margin:0 0 8px;color:var(--green-900);font-size:16px}
 .daily-attendance p{line-height:1.5}
 .attendance-actions .attendance-leave-form{flex:1 1 260px}
-.stat-card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
+a.stat-card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
 .stat-card .k{font-size:12px;color:var(--green-900);font-weight:600;margin-bottom:5px}
-.stat-card .v{font-size:15px;color:var(--text)}
+.stat-card .v{font-family:'Fraunces',serif;font-size:18px;font-weight:600;color:var(--green-900);line-height:1.3}
+.admin-unpaid-wages{background:#fff;margin-bottom:16px}
 .banner{
   border:1px solid #eddca4;border-radius:var(--radius);
   padding:13px 15px;background:var(--amber-100);font-size:13px;color:var(--amber-600);
@@ -275,6 +282,10 @@ tr.today td{color:var(--amber-600);font-weight:500}
   border:1px dashed var(--line);border-radius:var(--radius);padding:22px;
 }
 
+/* Link teks di dalam konten */
+main p a{color:var(--green-600);font-size:13px;font-weight:500}
+main p a:hover{text-decoration:underline}
+
 /* Aksi tabel (Kelola Anggota / Kelola Pekerjaan) */
 .table-action{
   font-size:12px;color:var(--green-600);text-decoration:none;margin-right:12px;
@@ -304,4 +315,113 @@ tr.today td{color:var(--amber-600);font-weight:500}
   main{padding:22px 18px}
   .profile-layout{flex-direction:column;align-items:center;text-align:center}
   .info-rows{width:100%}
+}
+
+/* ---------- HALAMAN KELOLA (Anggota, Jenis Pekerjaan) ---------- */
+.panel{background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow-sm)}
+.page-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.page-head h2{margin:0}
+.page-head p{margin:6px 0 0;font-size:13px;color:var(--text-muted)}
+
+/* Pencarian + filter */
+.filter-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.filter-bar input,.filter-bar select{padding:10px 12px;border:1px solid var(--line);border-radius:8px;font:inherit;font-size:14px;background:var(--bg);color:var(--text)}
+.filter-bar input{flex:1 1 240px;min-width:0}
+.filter-bar input:focus,.filter-bar select:focus{outline:none;border-color:var(--green-600);box-shadow:0 0 0 3px rgba(63,125,79,.15)}
+.filter-bar .btn-primary{width:auto;padding:10px 18px}
+
+/* Tabel */
+.panel .table-scroll{border-radius:var(--radius)}
+.panel th{background:var(--bg-soft);padding:11px 16px}
+.panel td{padding:13px 16px;vertical-align:middle}
+.panel tbody tr:last-child td{border-bottom:0}
+.col-end{text-align:right}
+.cell-num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.cell-name{display:block;font-weight:500}
+.cell-sub{display:block;margin-top:2px;font-size:12px;color:var(--text-muted)}
+.panel .badge{margin-top:0}
+.row-actions{display:flex;justify-content:flex-end;gap:2px}
+.row-actions form{margin:0}
+.row-actions .table-action{margin:0;padding:6px 10px;border-radius:6px}
+.row-actions .table-action:hover{background:var(--green-100);text-decoration:none}
+.row-actions .table-action.danger:hover{background:#fbe9e6}
+button.table-action{background:none;border:0;font:inherit;font-size:12px;cursor:pointer}
+.empty-state{padding:44px 20px;text-align:center;font-size:13px;color:var(--text-muted)}
+
+/* Form */
+.form-page.panel{max-width:560px;padding:24px 26px}
+.form-section+.form-section{margin-top:8px;padding-top:20px;border-top:1px solid var(--line-soft)}
+.form-section h3{margin:0 0 14px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+.field .hint{display:block;margin-top:5px;font-size:11px;color:var(--text-muted)}
+.field .error{display:block;margin-top:5px;font-size:12px;color:#b3261e}
+.field input.is-invalid,.field textarea.is-invalid{border-color:#b3261e}
+.check-row{display:flex;align-items:center;gap:10px;font-size:14px;cursor:pointer}
+.check-row input{width:18px;height:18px;accent-color:var(--green-600)}
+.form-page .form-actions{margin-top:22px}
+.form-page .form-actions .btn-primary{width:auto;padding:11px 20px}
+.form-page .form-actions .btn-outline{padding:11px 18px;font-size:14px}
+
+@media (max-width:520px){
+  .form-row{grid-template-columns:1fr}
+  .form-page.panel{padding:20px 18px}
+}
+
+/* ---------- JADWAL & PENUGASAN ---------- */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+/* Badge status tambahan */
+.badge-muted,.badge-danger{display:inline-block;font-size:11px;border-radius:10px;padding:3px 10px}
+.badge-muted{color:var(--text-muted);background:var(--bg-soft);border:1px solid var(--line-soft)}
+.badge-danger{color:#b3261e;background:#fbe9e6}
+
+/* Tombol & header halaman */
+.btn-auto{width:auto;padding:10px 18px}
+.page-actions{display:flex;gap:8px;flex-wrap:wrap}
+.page-actions .btn-primary{width:auto;padding:8px 14px;font-size:13px}
+.meta-row{display:flex;flex-wrap:wrap;gap:4px 18px}
+
+/* Panel & teks */
+.panel+.panel{margin-top:16px}
+.panel-body{padding:20px 24px}
+.panel-body>:last-child{margin-bottom:0}
+.panel-body h3{margin:0 0 6px}
+.section-title{margin:28px 0 6px}
+.page-head+.section-title{margin-top:0}
+.section-note{margin:0 0 12px;font-size:13px;color:var(--text-muted);line-height:1.5}
+.note{margin:0 0 14px;font-size:13px;color:var(--text-muted);line-height:1.5}
+.text-warn{color:var(--amber-600);font-weight:500}
+.cell-wrap{max-width:260px;font-size:12px;color:var(--text-muted)}
+.form-note{margin:-6px 0 14px;font-size:11px;color:var(--text-muted);line-height:1.5}
+.field select.is-invalid{border-color:#b3261e}
+
+/* Filter */
+.filter-bar{align-items:center}
+.filter-bar .check-row{font-size:13px}
+.filter-bar .check-row input{flex:none;min-width:0;padding:0;border:0}
+.filter-bar .btn-outline{padding:10px 16px}
+
+/* Form sebaris di dalam sel tabel */
+.inline-form{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.inline-form select{flex:1 1 200px;min-width:0;max-width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;font-size:13px;background:var(--bg);color:var(--text)}
+.inline-form .btn-primary{width:auto;padding:8px 14px;font-size:13px}
+
+/* Detail jadwal */
+.detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px 24px;margin:0}
+.detail-grid dt{margin-bottom:3px;font-size:12px;color:var(--text-muted)}
+.detail-grid dd{margin:0;font-size:14px}
+.detail-grid dd small{display:block;margin-top:2px;font-size:11px;color:var(--text-muted)}
+.detail-desc{margin:0 0 18px;font-size:14px;line-height:1.55}
+
+/* Pilihan anggota (penugasan otomatis) */
+.fieldset-plain{min-width:0;margin:0 0 14px;padding:0;border:0}
+.fieldset-plain legend{margin-bottom:8px;padding:0;font-size:13px;font-weight:600;color:var(--green-900)}
+.candidate{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;padding:10px 12px;border:1px solid var(--line-soft);border-radius:8px;cursor:pointer}
+.candidate:hover{background:var(--bg-soft)}
+.candidate input{flex:none;width:18px;height:18px;margin:2px 0 0;accent-color:var(--green-600)}
+.candidate-name{display:block;font-size:14px;font-weight:500}
+.candidate-reason{display:block;margin-top:2px;font-size:12px;color:var(--text-muted);line-height:1.45}
+
+@media (max-width:520px){
+  .panel-body{padding:18px 16px}
 }

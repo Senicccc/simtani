@@ -3,104 +3,135 @@
 @section('title', 'Penugasan Jadwal')
 
 @section('content')
-<div class="view-header">
-  <h2 style="margin:0">Penugasan: {{ $jadwal->nama_kegiatan }}</h2>
+<div class="page-head">
+  <div>
+    <h2>Penugasan: {{ $jadwal->nama_kegiatan }}</h2>
+    <p class="meta-row">
+      <span>{{ $jadwal->tanggal?->format('d-m-Y') }} – {{ $jadwal->tanggal_selesai?->format('d-m-Y') }}</span>
+      <span>{{ $jadwal->jenisPekerjaan->nama_pekerjaan }}</span>
+      <span>{{ $jadwal->lokasi }}</span>
+    </p>
+    <p>Total upah kegiatan: {{ (float) $jadwal->total_upah > 0 ? 'Rp '.number_format((float) $jadwal->total_upah, 0, ',', '.') : 'Belum ditetapkan' }}. Dibagi rata setelah seluruh tugas selesai.</p>
+  </div>
   <a href="{{ route('admin.jadwal.show', $jadwal) }}" class="btn-outline">Kembali ke jadwal</a>
 </div>
 
-<p>{{ $jadwal->tanggal?->format('d-m-Y') }} – {{ $jadwal->tanggal_selesai?->format('d-m-Y') }} | {{ $jadwal->jenisPekerjaan->nama_pekerjaan }} | {{ $jadwal->lokasi }}</p>
-<p>Total upah kegiatan: {{ (float) $jadwal->total_upah > 0 ? 'Rp '.number_format((float) $jadwal->total_upah, 0, ',', '.') : 'Belum ditetapkan' }}. Dibagi rata setelah seluruh tugas selesai.</p>
-<h3>Periksa kebutuhan anggota setiap hari</h3>
-<p>Jika anggota izin atau tidak hadir, tambahkan pengganti hanya bila jumlah anggota yang hadir belum memenuhi kebutuhan.</p>
-<div class="table-scroll">
-  <table>
-    <thead><tr><th>Tanggal</th><th>Anggota tersedia</th><th>Izin/tidak hadir</th><th>Tindakan admin</th></tr></thead>
-    <tbody>
-      @foreach($dailyCoverage as $day)
-        <tr>
-          <td>{{ $day['tanggal']->format('d-m-Y') }}</td>
-          <td>{{ $day['anggota'] }} / {{ $day['kebutuhan'] }}</td>
-          <td>{{ $day['izin'] }} anggota</td>
-          <td>
-            @if($day['izin'] > 0 && $day['anggota'] < $day['kebutuhan'])
-              <form method="post" action="{{ route('admin.jadwal.pengganti-harian', $jadwal) }}" style="display:flex;gap:8px;flex-wrap:wrap">
-                @csrf
-                <input type="hidden" name="tanggal" value="{{ $day['tanggal']->toDateString() }}">
-                <label for="pengganti-{{ $day['tanggal']->format('Ymd') }}">Pilih anggota pengganti untuk {{ $day['tanggal']->format('d-m-Y') }}</label>
-                <select id="pengganti-{{ $day['tanggal']->format('Ymd') }}" name="anggota_id" required>
-                  <option value="">Pilih nama anggota</option>
-                  @foreach($activeMembers as $member)
-                    <option value="{{ $member->id }}">{{ $member->nama_lengkap }}</option>
-                  @endforeach
-                </select>
-                <button type="submit" class="btn-primary">Tugaskan pengganti hari ini</button>
-              </form>
-            @elseif($day['anggota'] < $day['kebutuhan'])
-              <span>Masih diperlukan {{ $day['kebutuhan'] - $day['anggota'] }} anggota untuk memenuhi kebutuhan harian.</span>
-            @else
-              <span>Kuota harian terpenuhi</span>
-            @endif
-          </td>
-        </tr>
-      @endforeach
-    </tbody>
-  </table>
-</div>
-<div class="table-scroll">
-  <table>
-    <thead><tr><th>Anggota</th><th>Rentang penugasan</th><th>Status tugas</th><th>Presensi per hari</th><th>Upah</th><th>Aksi</th></tr></thead>
-    <tbody>
-      @forelse($jadwal->penugasan->where('status', '!=', 'cancelled') as $item)
-        <tr>
-          <td>{{ $item->anggota->nama_lengkap }}</td>
-          <td>{{ $item->tanggalMulaiEfektif()->format('d-m-Y') }} – {{ $item->tanggalSelesaiEfektif()->format('d-m-Y') }}</td>
-          <td>{{ ['assigned' => 'Ditugaskan', 'in_progress' => 'Sedang dikerjakan', 'waiting_verification' => 'Menunggu pemeriksaan', 'completed' => 'Selesai', 'cancelled' => 'Dibatalkan'][$item->status] ?? $item->status }}</td>
-          <td>{{ $item->presensiHarian->map(fn ($presence) => $presence->tanggal->format('d-m').' '.ucfirst(str_replace('_', ' ', $presence->status)))->implode(', ') ?: 'Belum dicatat' }}</td>
-          <td>
-            @if($item->upah)
-              Rp {{ number_format((float) $item->upah->jumlah_upah, 0, ',', '.') }} | {{ str_replace('_', ' ', $item->upah->status_pembayaran) }}
-            @elseif($item->status === 'completed')
-              Upah belum tersedia
-            @else
-              Menunggu pekerjaan selesai
-            @endif
-          </td>
-          <td>
-            <a href="{{ route('admin.penugasan.show', $item) }}" class="table-action">Detail</a>
-            @if(!in_array($item->status, ['completed', 'cancelled'], true))
-              <a href="{{ route('admin.penugasan.edit', $item) }}" class="table-action">Edit</a>
-            @endif
-          </td>
-        </tr>
-      @empty
-        <tr><td colspan="6">Belum ada anggota yang ditugaskan.</td></tr>
-      @endforelse
-
-      @if($availableSlots > 0)
-        <tr>
-          <td colspan="6">
-            <form method="post" action="{{ route('admin.penugasan.store') }}" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-              @csrf
-              <input type="hidden" name="jadwal_id" value="{{ $jadwal->id }}">
-              <label for="anggota-search">Cari anggota untuk mengisi {{ $availableSlots }} posisi yang tersisa</label>
-              <input id="anggota-search" type="search" placeholder="Ketik nama atau nomor anggota" autocomplete="off">
-              <select id="anggota_id" name="anggota_id" required>
-                <option value="">Pilih anggota aktif yang jadwalnya tersedia</option>
-                @foreach($availableMembers as $member)
-                  <option value="{{ $member['anggota_id'] }}" @selected(old('anggota_id') == $member['anggota_id'])>{{ $member['nama_lengkap'] }} ({{ $member['nomor_anggota'] }}), {{ $member['jumlah_tugas_aktif'] }} tugas aktif, {{ $member['jumlah_tugas_selesai'] }} tugas selesai, {{ $member['tingkat_kemampuan'] ? 'kompetensi '.$member['tingkat_kemampuan'] : 'kompetensi belum dicatat' }}</option>
-                @endforeach
-              </select>
-              <button type="submit" class="btn-outline" @disabled(count($availableMembers) === 0)>Tambah anggota</button>
-              @if(empty($availableMembers))
-                <small>Tidak ada anggota aktif dengan jadwal yang tersedia pada waktu ini.</small>
+<h3 class="section-title">Periksa Kebutuhan Anggota Setiap Hari</h3>
+<p class="section-note">Jika anggota izin atau tidak hadir, tambahkan pengganti hanya bila jumlah anggota yang hadir belum memenuhi kebutuhan.</p>
+<div class="panel">
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr><th>Tanggal</th><th>Anggota Tersedia</th><th>Izin/Tidak Hadir</th><th>Tindakan Admin</th></tr>
+      </thead>
+      <tbody>
+        @foreach ($dailyCoverage as $day)
+          <tr>
+            <td class="cell-num">{{ $day['tanggal']->format('d-m-Y') }}</td>
+            <td class="cell-num {{ $day['anggota'] < $day['kebutuhan'] ? 'text-warn' : '' }}">{{ $day['anggota'] }} / {{ $day['kebutuhan'] }}</td>
+            <td>{{ $day['izin'] }} anggota</td>
+            <td>
+              @if ($day['izin'] > 0 && $day['anggota'] < $day['kebutuhan'])
+                <form method="post" action="{{ route('admin.jadwal.pengganti-harian', $jadwal) }}" class="inline-form">
+                  @csrf
+                  <input type="hidden" name="tanggal" value="{{ $day['tanggal']->toDateString() }}">
+                  <label class="sr-only" for="pengganti-{{ $day['tanggal']->format('Ymd') }}">Pilih anggota pengganti untuk {{ $day['tanggal']->format('d-m-Y') }}</label>
+                  <select id="pengganti-{{ $day['tanggal']->format('Ymd') }}" name="anggota_id" required>
+                    <option value="">Pilih nama anggota</option>
+                    @foreach ($activeMembers as $member)
+                      <option value="{{ $member->id }}">{{ $member->nama_lengkap }}</option>
+                    @endforeach
+                  </select>
+                  <button type="submit" class="btn-primary">Tugaskan Pengganti</button>
+                </form>
+              @elseif ($day['anggota'] < $day['kebutuhan'])
+                <span class="text-warn">Masih diperlukan {{ $day['kebutuhan'] - $day['anggota'] }} anggota untuk memenuhi kebutuhan harian.</span>
+              @else
+                <span class="badge">Kuota harian terpenuhi</span>
               @endif
-            </form>
-          </td>
-        </tr>
-      @endif
-    </tbody>
-  </table>
+            </td>
+          </tr>
+        @endforeach
+      </tbody>
+    </table>
+  </div>
 </div>
+
+<h3 class="section-title">Anggota yang Ditugaskan</h3>
+<div class="panel">
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Anggota</th>
+          <th>Rentang Penugasan</th>
+          <th>Status Tugas</th>
+          <th>Presensi per Hari</th>
+          <th>Upah</th>
+          <th class="col-end">Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        @forelse ($jadwal->penugasan->where('status', '!=', 'cancelled') as $item)
+          <tr>
+            <td><span class="cell-name">{{ $item->anggota->nama_lengkap }}</span></td>
+            <td class="cell-num">{{ $item->tanggalMulaiEfektif()->format('d-m-Y') }} – {{ $item->tanggalSelesaiEfektif()->format('d-m-Y') }}</td>
+            <td>@include('admin.partials.status-badge', ['type' => 'tugas', 'status' => $item->status])</td>
+            <td class="cell-wrap">{{ $item->presensiHarian->map(fn ($presence) => $presence->tanggal->format('d-m').' '.ucfirst(str_replace('_', ' ', $presence->status)))->implode(', ') ?: 'Belum dicatat' }}</td>
+            <td>
+              @if ($item->upah)
+                Rp {{ number_format((float) $item->upah->jumlah_upah, 0, ',', '.') }} | {{ str_replace('_', ' ', $item->upah->status_pembayaran) }}
+              @elseif ($item->status === 'completed')
+                Upah belum tersedia
+              @else
+                Menunggu pekerjaan selesai
+              @endif
+            </td>
+            <td>
+              <div class="row-actions">
+                <a href="{{ route('admin.penugasan.show', $item) }}" class="table-action">Detail</a>
+                @if (! in_array($item->status, ['completed', 'cancelled'], true))
+                  <a href="{{ route('admin.penugasan.edit', $item) }}" class="table-action">Edit</a>
+                @endif
+              </div>
+            </td>
+          </tr>
+        @empty
+          <tr><td colspan="6"><div class="empty-state">Belum ada anggota yang ditugaskan.</div></td></tr>
+        @endforelse
+      </tbody>
+    </table>
+  </div>
+</div>
+
+@if ($availableSlots > 0)
+  <div class="panel panel-body">
+    <h3>Tambah Anggota</h3>
+    <p class="note">Masih ada {{ $availableSlots }} posisi yang belum terisi.</p>
+    <form method="post" action="{{ route('admin.penugasan.store') }}">
+      @csrf
+      <input type="hidden" name="jadwal_id" value="{{ $jadwal->id }}">
+      <div class="field">
+        <label for="anggota-search">Cari anggota</label>
+        <input id="anggota-search" type="search" placeholder="Ketik nama atau nomor anggota" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="anggota_id">Pilih anggota</label>
+        <select id="anggota_id" name="anggota_id" class="@error('anggota_id') is-invalid @enderror" required>
+          <option value="">Pilih anggota aktif yang jadwalnya tersedia</option>
+          @foreach ($availableMembers as $member)
+            <option value="{{ $member['anggota_id'] }}" @selected(old('anggota_id') == $member['anggota_id'])>{{ $member['nama_lengkap'] }} ({{ $member['nomor_anggota'] }}), {{ $member['jumlah_tugas_aktif'] }} tugas aktif, {{ $member['jumlah_tugas_selesai'] }} tugas selesai, {{ $member['tingkat_kemampuan'] ? 'kompetensi '.$member['tingkat_kemampuan'] : 'kompetensi belum dicatat' }}</option>
+          @endforeach
+        </select>
+        @error('anggota_id') <span class="error">{{ $message }}</span> @enderror
+        @if (empty($availableMembers))
+          <span class="hint">Tidak ada anggota aktif dengan jadwal yang tersedia pada waktu ini.</span>
+        @endif
+      </div>
+      <button type="submit" class="btn-primary btn-auto" @disabled(count($availableMembers) === 0)>Tambah Anggota</button>
+    </form>
+  </div>
+@endif
 @endsection
 
 @push('scripts')
