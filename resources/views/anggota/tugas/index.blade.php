@@ -3,31 +3,40 @@
 @section('title', 'Tugas Saya')
 
 @section('content')
-<div class="view-header">
-  <h2 style="margin:0">Tugas Saya</h2>
-  <a href="{{ route('anggota.riwayat-tugas') }}" class="btn-outline">Riwayat tugas</a>
+<div class="page-head">
+  <div>
+    <h2>Tugas Saya</h2>
+    <p>{{ $penugasan->count() }} tugas ditampilkan.</p>
+  </div>
+  <a href="{{ route('anggota.riwayat-tugas') }}" class="btn-outline">Riwayat Tugas</a>
 </div>
 
-<form method="get" style="display:flex;gap:10px;margin:16px 0">
-  <input name="q" value="{{ request('q') }}" placeholder="Cari kegiatan" aria-label="Cari kegiatan">
-  <button type="submit" class="btn-outline">Cari</button>
+<form method="get" class="filter-bar">
+  <input type="search" name="q" value="{{ request('q') }}" placeholder="Cari kegiatan" aria-label="Cari kegiatan">
+  <button type="submit" class="btn-primary">Cari</button>
   @if(request()->filled('q'))
-    <a href="{{ route('anggota.tugas.index') }}" class="table-action">Bersihkan</a>
+    <a href="{{ route('anggota.tugas.index') }}" class="btn-outline">Bersihkan</a>
   @endif
 </form>
 
 <div class="member-task-list">
   @forelse($penugasan as $item)
-    <article class="stat-card member-task-card">
-      <h3>{{ $item->jadwal->nama_kegiatan }}</h3>
-      <p><strong>Kategori:</strong> {{ $item->jadwal->jenisPekerjaan->nama_pekerjaan }}</p>
-      <p><strong>Tanggal:</strong> {{ $item->tanggalMulaiEfektif()->format('d-m-Y') }} – {{ $item->tanggalSelesaiEfektif()->format('d-m-Y') }}</p>
-      <p><strong>Lokasi:</strong> {{ $item->jadwal->lokasi }}</p>
-      <p><strong>Status tugas:</strong> {{ ['assigned' => 'Ditugaskan', 'in_progress' => 'Sedang dikerjakan', 'waiting_verification' => 'Menunggu pemeriksaan', 'completed' => 'Selesai', 'cancelled' => 'Dibatalkan'][$item->status] ?? $item->status }}</p>
-      <a href="{{ route('anggota.tugas.show', $item) }}" class="btn-primary attendance-button">Lihat detail tugas dan presensi</a>
+    <article class="panel member-card">
+      <div class="member-card__head">
+        <span class="cell-name">{{ $item->jadwal->nama_kegiatan }}</span>
+        @include('admin.partials.status-badge', ['type' => 'tugas', 'status' => $item->status])
+      </div>
+      <dl class="detail-grid">
+        <div><dt>Kategori</dt><dd>{{ $item->jadwal->jenisPekerjaan->nama_pekerjaan }}</dd></div>
+        <div><dt>Tanggal</dt><dd>{{ $item->tanggalMulaiEfektif()->format('d-m-Y') }} – {{ $item->tanggalSelesaiEfektif()->format('d-m-Y') }}</dd></div>
+        <div><dt>Lokasi</dt><dd>{{ $item->jadwal->lokasi }}</dd></div>
+      </dl>
+      <div class="task-card__action">
+        <a href="{{ route('anggota.tugas.show', $item) }}" class="btn-primary btn-auto attendance-button">Lihat Detail Tugas dan Presensi</a>
+      </div>
     </article>
   @empty
-    <p class="placeholder-note">Belum ada tugas yang cocok.</p>
+    <div class="panel"><div class="empty-state">Belum ada tugas yang cocok.</div></div>
   @endforelse
 </div>
 @endsection

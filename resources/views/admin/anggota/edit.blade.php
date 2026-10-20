@@ -1,14 +1,21 @@
 @extends('layouts.backend')
 @section('title', 'Edit Anggota')
 @section('content')
-<h2>Edit Anggota</h2>
-<form method="post" action="{{ route('admin.anggota.update', $anggota) }}" class="form-page">
+<div class="page-head">
+  <div>
+    <h2>Edit Anggota</h2>
+    <p>{{ $anggota->nomor_anggota }}</p>
+  </div>
+  <a href="{{ route('admin.anggota.index') }}" class="btn-outline">Kembali ke daftar</a>
+</div>
+
+<form method="post" action="{{ route('admin.anggota.update', $anggota) }}" class="form-page panel">
   @csrf
   @method('PUT')
   @include('admin.anggota.form')
   <div class="form-actions">
-    <button type="submit" class="btn-primary" style="width:auto;padding:10px 20px">Simpan perubahan</button>
-    <a href="{{ route('admin.anggota.index') }}" class="btn-outline" style="display:inline-flex;align-items:center;text-decoration:none">Batal</a>
+    <button type="submit" class="btn-primary">Simpan Perubahan</button>
+    <a href="{{ route('admin.anggota.index') }}" class="btn-outline">Batal</a>
   </div>
 </form>
 @endsection

@@ -3,49 +3,84 @@
 @section('title', 'Penugasan')
 
 @section('content')
-<div class="view-header">
-  <h2 style="margin:0">Penugasan</h2>
-  <a href="{{ route('admin.penugasan.create') }}" class="btn-outline">Tambah anggota ke tugas</a>
+<div class="page-head">
+  <div>
+    <h2>Penugasan</h2>
+    <p>{{ $jadwal->count() }} kegiatan ditampilkan.</p>
+  </div>
+  <a href="{{ route('admin.penugasan.create') }}" class="btn-outline">+ Tambah Anggota ke Tugas</a>
 </div>
-<form method="get" style="display:flex;gap:10px;margin:16px 0;flex-wrap:wrap">
-  <input name="q" value="{{ request('q') }}" placeholder="Cari kegiatan atau anggota">
+
+<form method="get" class="filter-bar">
+  <input type="search" name="q" value="{{ request('q') }}" placeholder="Cari kegiatan atau anggota" aria-label="Cari kegiatan atau anggota">
   <select name="status" aria-label="Filter status tugas">
     <option value="">Semua status</option>
-    @foreach(['active' => 'Semua tugas aktif', 'assigned' => 'Ditugaskan', 'in_progress' => 'Sedang dikerjakan', 'waiting_verification' => 'Menunggu verifikasi', 'completed' => 'Selesai', 'cancelled' => 'Dibatalkan'] as $value => $label)
+    @foreach (['active' => 'Semua tugas aktif', 'assigned' => 'Ditugaskan', 'in_progress' => 'Sedang dikerjakan', 'waiting_verification' => 'Menunggu verifikasi', 'completed' => 'Selesai', 'cancelled' => 'Dibatalkan'] as $value => $label)
       <option value="{{ $value }}" @selected(request('status') === $value)>{{ $label }}</option>
     @endforeach
   </select>
-  <button type="submit" class="btn-outline">Filter</button>
+  <button type="submit" class="btn-primary">Filter</button>
 </form>
-<div class="table-scroll">
-  <table>
-    <thead><tr><th>Kegiatan</th><th>Kategori</th><th>Tanggal</th><th>Anggota</th><th>Status</th><th>Aksi</th></tr></thead>
-    <tbody>
-      @forelse($jadwal as $item)
+
+<div class="panel">
+  <div class="table-scroll">
+    <table>
+      <thead>
         <tr>
-          <td>{{ $item->nama_kegiatan }}</td>
-          <td>{{ $item->jenisPekerjaan->nama_pekerjaan }}</td>
-          <td>{{ $item->tanggal?->format('d-m-Y') }}</td>
-          <td>
-            {{ $item->anggota_terisi }} / {{ $item->jumlah_orang_dibutuhkan }}
-            @if($item->tanggal_selesai && ! $item->tanggal_selesai->isSameDay($item->tanggal))
-              <br><small>{{ $item->tanggal->format('d-m-Y') }} – {{ $item->tanggal_selesai->format('d-m-Y') }}</small>
-            @endif
-          </td>
-          <td>
-            @foreach($item->penugasan->where('status', '!=', 'cancelled') as $assignment)
-              <div>{{ $assignment->anggota->nama_lengkap }}: {{ ['assigned' => 'Ditugaskan', 'in_progress' => 'Sedang dikerjakan', 'waiting_verification' => 'Menunggu pemeriksaan', 'completed' => 'Selesai', 'cancelled' => 'Dibatalkan'][$assignment->status] ?? $assignment->status }} <a href="{{ route('admin.penugasan.show', $assignment) }}">Buka detail</a></div>
-            @endforeach
-          </td>
-          <td>
-            <a href="{{ route('admin.jadwal.show', $item) }}" class="table-action">Detail dan edit tugas</a>
-            <a href="{{ route('admin.jadwal.penugasan', $item) }}" class="table-action">Kelola anggota</a>
-          </td>
+          <th>Kegiatan</th>
+          <th>Tanggal</th>
+          <th>Terisi</th>
+          <th>Anggota dan Status</th>
+          <th class="col-end">Aksi</th>
         </tr>
-      @empty
-        <tr><td colspan="6">Tidak ada penugasan yang cocok dengan filter.</td></tr>
-      @endforelse
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        @forelse ($jadwal as $item)
+          @php $aktif = $item->penugasan->where('status', '!=', 'cancelled'); @endphp
+          <tr>
+            <td>
+              <span class="cell-name">{{ $item->nama_kegiatan }}</span>
+              <span class="cell-sub">{{ $item->jenisPekerjaan->nama_pekerjaan }}</span>
+            </td>
+            <td class="cell-num">
+              {{ $item->tanggal?->format('d-m-Y') }}
+              @if ($item->tanggal_selesai && ! $item->tanggal_selesai->isSameDay($item->tanggal))
+                <span class="cell-sub">s/d {{ $item->tanggal_selesai->format('d-m-Y') }}</span>
+              @endif
+            </td>
+            <td class="cell-num {{ $item->anggota_terisi < $item->jumlah_orang_dibutuhkan ? 'text-warn' : '' }}">
+              {{ $item->anggota_terisi }} / {{ $item->jumlah_orang_dibutuhkan }}
+            </td>
+            <td>
+              @if ($aktif->isEmpty())
+                <span class="muted">Belum ada anggota</span>
+              @else
+                <ul class="member-list">
+                  @foreach ($aktif as $assignment)
+                    <li>
+                      <a href="{{ route('admin.penugasan.show', $assignment) }}">{{ $assignment->anggota->nama_lengkap }}</a>
+                      @include('admin.partials.status-badge', ['type' => 'tugas', 'status' => $assignment->status])
+                    </li>
+                  @endforeach
+                </ul>
+              @endif
+            </td>
+            <td>
+              <div class="row-actions">
+                <a href="{{ route('admin.jadwal.show', $item) }}" class="table-action">Detail dan Edit Tugas</a>
+                <a href="{{ route('admin.jadwal.penugasan', $item) }}" class="table-action">Kelola Anggota</a>
+              </div>
+            </td>
+          </tr>
+        @empty
+          <tr>
+            <td colspan="5">
+              <div class="empty-state">Tidak ada penugasan yang cocok dengan filter.</div>
+            </td>
+          </tr>
+        @endforelse
+      </tbody>
+    </table>
+  </div>
 </div>
 @endsection

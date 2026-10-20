@@ -1,1 +1,4 @@
-<form method="post" action="{{ route('anggota.tugas.mulai', $penugasan) }}">@csrf<button type="submit">Mulai tugas dan catat hadir</button></form>
+<form method="post" action="{{ route('anggota.tugas.mulai', $penugasan) }}">
+  @csrf
+  <button type="submit" class="btn-primary btn-auto">Mulai Tugas dan Catat Hadir</button>
+</form>
