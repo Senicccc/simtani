@@ -5,18 +5,18 @@
   $isScheduledToday = $today->betweenIncluded($penugasan->tanggalMulaiEfektif(), $penugasan->tanggalSelesaiEfektif());
 @endphp
 
-<section class="daily-attendance" aria-label="Presensi hari ini untuk {{ $penugasan->jadwal->nama_kegiatan }}">
-  <h4>Presensi hari ini · {{ $today->format('d-m-Y') }}</h4>
+<section class="panel panel-body" aria-label="Presensi hari ini untuk {{ $penugasan->jadwal->nama_kegiatan }}">
+  <h3>Presensi hari ini · {{ $today->format('d-m-Y') }}</h3>
   @if($penugasan->status === 'waiting_verification')
-    <p>Laporan tugas sedang diperiksa admin.</p>
+    <p class="note">Laporan tugas sedang diperiksa admin.</p>
   @elseif(!$canManageAttendance)
-    <p>Tugas ini sudah {{ $penugasan->status === 'completed' ? 'selesai' : 'tidak aktif' }}.</p>
+    <p class="note">Tugas ini sudah {{ $penugasan->status === 'completed' ? 'selesai' : 'tidak aktif' }}.</p>
   @elseif($today->lt($penugasan->tanggalMulaiEfektif()))
-    <p>Presensi mulai tersedia pada {{ $penugasan->tanggalMulaiEfektif()->format('d-m-Y') }}. Datang kembali pada tanggal tersebut untuk check-in.</p>
+    <p class="note">Presensi mulai tersedia pada {{ $penugasan->tanggalMulaiEfektif()->format('d-m-Y') }}. Datang kembali pada tanggal tersebut untuk check-in.</p>
   @elseif($today->gt($penugasan->tanggalSelesaiEfektif()))
-    <p>Masa presensi berakhir pada {{ $penugasan->tanggalSelesaiEfektif()->format('d-m-Y') }}. Hubungi admin jika ada presensi yang belum dicatat.</p>
+    <p class="note">Masa presensi berakhir pada {{ $penugasan->tanggalSelesaiEfektif()->format('d-m-Y') }}. Hubungi admin jika ada presensi yang belum dicatat.</p>
   @elseif(!$isScheduledToday)
-    <p>Presensi belum tersedia hari ini.</p>
+    <p class="note">Presensi belum tersedia hari ini.</p>
   @elseif($todayPresence?->status === 'izin' || $todayPresence?->status === 'tidak_hadir')
     <p class="attendance-status-warning">Status hari ini: {{ $todayPresence->status === 'izin' ? 'izin' : 'tidak hadir' }}. Admin akan menugaskan pengganti jika jumlah anggota yang hadir belum mencukupi.</p>
   @elseif($todayPresence?->waktu_check_out)
@@ -25,15 +25,17 @@
     <p class="attendance-status">Anda sudah check-in pukul {{ $todayPresence->waktu_check_in->format('H:i') }}.</p>
     <form method="post" action="{{ route('anggota.tugas.check-out', $penugasan) }}" onsubmit="return confirm('Apakah Anda yakin ingin check-out dari tugas ini sekarang?')">
       @csrf
-      <button type="submit" class="btn-primary attendance-button">Catat check-out hari ini · Check-out sekarang</button>
+      <button type="submit" class="btn-primary btn-auto attendance-button">Catat check-out hari ini · Check-out sekarang</button>
     </form>
   @else
-    <p>Pilih tindakan yang sesuai dengan kehadiran Anda hari ini.</p>
-    <div class="attendance-actions">
-      <form method="post" action="{{ route('anggota.tugas.mulai', $penugasan) }}" onsubmit="return confirm('Apakah Anda yakin ingin check-in dan mulai tugas ini sekarang?')">
-        @csrf
-        <button type="submit" class="btn-primary attendance-button">Mulai dan catat hadir hari ini · Check-in</button>
-      </form>
+    <p class="note">Pilih tindakan yang sesuai dengan kehadiran Anda hari ini.</p>
+    <form method="post" action="{{ route('anggota.tugas.mulai', $penugasan) }}" onsubmit="return confirm('Apakah Anda yakin ingin check-in dan mulai tugas ini sekarang?')">
+      @csrf
+      <button type="submit" class="btn-primary btn-auto attendance-button">Mulai dan catat hadir hari ini · Check-in</button>
+    </form>
+
+    <div class="attendance-alt">
+      <h4>Tidak bisa hadir hari ini?</h4>
       <form method="post" action="{{ route('anggota.presensi.status', $penugasan) }}" class="attendance-leave-form">
         @csrf
         <input type="hidden" name="tanggal" value="{{ $today->toDateString() }}">
