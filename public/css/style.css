@@ -21,12 +21,13 @@ body{
   font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;
   color:var(--text);
   background:var(--bg-soft);
+  line-height:1.55;
 }
-h1,h2,.brand,.mobile-topbar-brand{font-family:'Fraunces',serif}
+h1,h2,h3,h4,.brand,.mobile-topbar-brand{font-family:'Manrope','DM Sans',sans-serif}
 [hidden]{display:none !important}
 button{font-family:inherit}
 a{color:inherit;text-decoration:none}
-h3,h4{font-family:'Fraunces',serif;color:var(--green-900);font-weight:600}
+h3,h4{color:var(--green-900);font-weight:700}
 h3{font-size:16px}
 a,button,input,select,textarea{touch-action:manipulation}
 :focus-visible{outline:3px solid #a8720f;outline-offset:3px}
@@ -38,25 +39,13 @@ a,button,input,select,textarea{touch-action:manipulation}
 }
 .login-brand{
   flex:1;
-  background:linear-gradient(180deg, rgba(31,77,44,.5), rgba(31,77,44,.82)), url('../images/Background.jpg') center/cover no-repeat;
+  background:var(--green-600);
   color:#fff;
   display:flex;
   flex-direction:column;
   align-items:center;
   justify-content:center;
-  gap:12px;
-  padding:40px;
 }
-.login-brand .mark{
-  width:64px;height:64px;border-radius:50%;
-  border:2px solid rgba(255,255,255,.85);
-  overflow:hidden;
-  background:#fff;
-  box-shadow:var(--shadow-md);
-}
-.login-brand .mark img{width:100%;height:100%;object-fit:cover;display:block}
-.login-brand h1{font-size:clamp(20px,4vw,26px);margin:0;font-weight:600}
-.login-brand p{font-size:13px;color:rgba(255,255,255,.88);margin:0;text-align:center;max-width:240px;line-height:1.5}
 .login-form{
   flex:1;
   display:flex;
@@ -215,6 +204,9 @@ main{flex:1;padding:32px 36px;min-width:0}
 .attendance-leave-form textarea{width:100%;min-height:80px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font:inherit}
 .attendance-day{padding:14px 0;border-bottom:1px solid var(--line-soft)}
 .attendance-button{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:12px 16px;text-align:center;text-decoration:none;font-size:15px}
+.attendance-primary-actions{display:flex;align-items:stretch;flex-wrap:wrap;gap:10px;margin:12px 0}
+.attendance-primary-actions form{display:flex}
+.attendance-primary-actions .attendance-button{width:auto;min-width:160px;margin:0}
 .attendance-history-link{display:inline-flex;margin-top:14px;min-height:44px;align-items:center}
 .member-quick-start{margin-bottom:16px}
 .member-quick-start .attendance-button{width:auto}
@@ -226,7 +218,7 @@ main{flex:1;padding:32px 36px;min-width:0}
 .attendance-actions .attendance-leave-form{flex:1 1 260px}
 a.stat-card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
 .stat-card .k{font-size:12px;color:var(--green-900);font-weight:600;margin-bottom:5px}
-.stat-card .v{font-family:'Fraunces',serif;font-size:18px;font-weight:600;color:var(--green-900);line-height:1.3}
+.stat-card .v{font-family:'Manrope','DM Sans',sans-serif;font-size:18px;font-weight:700;color:var(--green-900);line-height:1.3}
 .admin-unpaid-wages{background:#fff;margin-bottom:16px}
 .banner{
   border:1px solid #eddca4;border-radius:var(--radius);
@@ -457,6 +449,10 @@ button.table-action{background:none;border:0;font:inherit;font-size:12px;cursor:
 .member-card__actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;padding:14px 20px;border-top:1px solid var(--line-soft);background:#f7faf7;border-radius:0 0 var(--radius) var(--radius)}
 .member-card__actions form{margin:0}
 .member-card__actions .btn-primary{width:auto;padding:8px 14px;font-size:13px}
+.verification-rejection{display:grid;gap:8px;min-width:min(100%,280px)}
+.verification-rejection textarea{width:100%;min-height:64px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;font-size:13px;resize:vertical}
+.member-removal-form{margin-top:16px}
+.member-removal-form .btn-danger{margin-top:4px}
 
 /* ---------- PERMINTAAN PERUBAHAN TUGAS ---------- */
 .cell-reason{max-width:340px;line-height:1.45}
@@ -466,7 +462,7 @@ button.table-action{background:none;border:0;font:inherit;font-size:12px;cursor:
 .form-actions+.note{margin:10px 0 0}
 
 /* ---------- UPAH ---------- */
-.amount{font-family:'Fraunces',serif;font-size:20px;font-weight:600;color:var(--green-900);line-height:1.3}
+.amount{font-family:'Manrope','DM Sans',sans-serif;font-size:20px;font-weight:700;color:var(--green-900);line-height:1.3}
 .mb-16{margin-bottom:16px}
 
 /* ---------- HUBUNGI ADMIN ---------- */
@@ -488,5 +484,11 @@ button.table-action{background:none;border:0;font:inherit;font-size:12px;cursor:
 .attendance-day form+form{margin-top:10px}
 .attendance-day-head{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;margin-bottom:4px}
 .attendance-alt .attendance-button,.attendance-day .attendance-button{width:100%;max-width:420px}
+.attendance-primary-actions .btn-outline{border-color:var(--line);background:#fff}
+.attendance-primary-actions .btn-outline:hover{border-color:var(--green-600);background:var(--green-100)}
+@media(max-width:520px){
+  .attendance-primary-actions{display:grid;grid-template-columns:1fr}
+  .attendance-primary-actions form,.attendance-primary-actions .attendance-button{width:100%}
+}
 .task-card__action{padding:14px 20px;border-top:1px solid var(--line-soft);background:#f7faf7;border-radius:0 0 var(--radius) var(--radius)}
 .page-actions--bottom{margin-top:20px}

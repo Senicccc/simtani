@@ -31,7 +31,7 @@
             <td>{{ $item->jenis_permintaan === 'tukar' ? 'Pindah jadwal' : 'Sanggah tugas' }}</td>
             <td>
               @if ($item->targetJadwal)
-                {{ $item->targetJadwal->nama_kegiatan }} · {{ $item->targetJadwal->tanggal?->format('d-m-Y') }}
+                {{ $item->targetJadwal->nama_kegiatan }} · {{ $item->targetJadwal->tanggal?->format('d/m/Y') }}
               @elseif ($item->targetPenugasan)
                 <a href="{{ route('anggota.tugas.show', $item->targetPenugasan) }}" class="table-action">{{ $item->targetPenugasan->jadwal->nama_kegiatan }} · {{ $item->targetPenugasan->anggota->nama_lengkap }}</a>
               @else

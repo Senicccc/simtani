@@ -72,7 +72,7 @@
       <tbody>
         @forelse ($rekapJadwal as $item)
           <tr>
-            <td class="cell-num">{{ $item->tanggal?->format('d-m-Y') }}</td>
+            <td class="cell-num">{{ $item->tanggal?->format('d/m/Y') }}</td>
             <td><span class="cell-name">{{ $item->nama_kegiatan }}</span></td>
             <td>{{ $item->jenisPekerjaan->nama_pekerjaan ?? '-' }}</td>
             <td>{{ $item->lokasi }}</td>
@@ -105,7 +105,7 @@
           <tr>
             <td>
               <span class="cell-name">{{ $item->jadwal->nama_kegiatan }}</span>
-              <span class="cell-sub">{{ $item->jadwal->tanggal?->format('d-m-Y') }}</span>
+              <span class="cell-sub">{{ $item->jadwal->tanggal?->format('d/m/Y') }}</span>
             </td>
             <td>{{ $item->anggota->nama_lengkap }}</td>
             <td>@include('admin.partials.status-badge', ['type' => 'tugas', 'status' => $item->status])</td>
@@ -139,8 +139,8 @@
           <tr>
             <td>{{ $item->penugasan->jadwal->nama_kegiatan }}</td>
             <td>{{ $item->penugasan->anggota->nama_lengkap }}</td>
-            <td class="cell-num">{{ $item->waktu_check_in?->format('d-m-Y H:i') ?? '-' }}</td>
-            <td class="cell-num">{{ $item->waktu_check_out?->format('d-m-Y H:i') ?? '-' }}</td>
+            <td class="cell-num">{{ $item->waktu_check_in?->format('d/m/Y H:i') ?? '-' }}</td>
+            <td class="cell-num">{{ $item->waktu_check_out?->format('d/m/Y H:i') ?? '-' }}</td>
             <td>@include('admin.partials.status-badge', ['type' => 'presensi', 'status' => $item->status])</td>
             <td class="cell-wrap">{{ $item->catatan ?: '-' }}</td>
           </tr>
@@ -168,7 +168,7 @@
             <td>{{ $item->penugasan->anggota->nama_lengkap }}</td>
             <td class="cell-num">Rp {{ number_format((float) $item->jumlah_upah, 0, ',', '.') }}</td>
             <td>@include('admin.partials.status-badge', ['type' => 'bayar', 'status' => $item->status_pembayaran])</td>
-            <td class="cell-num">{{ $item->waktu_pembayaran?->format('d-m-Y H:i') ?? '-' }}</td>
+            <td class="cell-num">{{ $item->waktu_pembayaran?->format('d/m/Y H:i') ?? '-' }}</td>
             <td>
               <div class="row-actions">
                 <a href="{{ route('admin.upah.edit', $item) }}" class="table-action">Kelola Upah</a>

@@ -15,7 +15,7 @@
   <input type="search" name="q" value="{{ request('q') }}" placeholder="Cari kegiatan atau anggota" aria-label="Cari kegiatan atau anggota">
   <select name="status" aria-label="Filter status tugas">
     <option value="">Semua status</option>
-    @foreach (['active' => 'Semua tugas aktif', 'assigned' => 'Ditugaskan', 'in_progress' => 'Sedang dikerjakan', 'waiting_verification' => 'Menunggu verifikasi', 'completed' => 'Selesai', 'cancelled' => 'Dibatalkan'] as $value => $label)
+    @foreach (['active' => 'Semua tugas aktif', 'assigned' => 'Ditugaskan', 'in_progress' => 'Sedang dikerjakan', 'waiting_verification' => 'Menunggu verifikasi', 'completed' => 'Selesai', 'rejected' => 'Laporan ditolak', 'cancelled' => 'Dibatalkan'] as $value => $label)
       <option value="{{ $value }}" @selected(request('status') === $value)>{{ $label }}</option>
     @endforeach
   </select>
@@ -31,7 +31,7 @@
           <th>Tanggal</th>
           <th>Terisi</th>
           <th>Anggota dan Status</th>
-          <th class="col-end">Aksi</th>
+          <th class="col-end">Kelola</th>
         </tr>
       </thead>
       <tbody>
@@ -43,9 +43,9 @@
               <span class="cell-sub">{{ $item->jenisPekerjaan->nama_pekerjaan }}</span>
             </td>
             <td class="cell-num">
-              {{ $item->tanggal?->format('d-m-Y') }}
+              {{ $item->tanggal?->format('d/m/Y') }}
               @if ($item->tanggal_selesai && ! $item->tanggal_selesai->isSameDay($item->tanggal))
-                <span class="cell-sub">s/d {{ $item->tanggal_selesai->format('d-m-Y') }}</span>
+                <span class="cell-sub">s/d {{ $item->tanggal_selesai->format('d/m/Y') }}</span>
               @endif
             </td>
             <td class="cell-num {{ $item->anggota_terisi < $item->jumlah_orang_dibutuhkan ? 'text-warn' : '' }}">
@@ -67,8 +67,7 @@
             </td>
             <td>
               <div class="row-actions">
-                <a href="{{ route('admin.jadwal.show', $item) }}" class="table-action">Detail dan Edit Tugas</a>
-                <a href="{{ route('admin.jadwal.penugasan', $item) }}" class="table-action">Kelola Anggota</a>
+                <a href="{{ route('admin.jadwal.penugasan', $item) }}" class="table-action">Kelola Penugasan</a>
               </div>
             </td>
           </tr>

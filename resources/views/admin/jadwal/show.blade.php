@@ -14,13 +14,20 @@
   </div>
 </div>
 
+@if ($jadwal->status === 'completed' && $jadwal->penugasan->contains(fn ($assignment) => $assignment->status === 'rejected') && today()->greaterThan($jadwal->tanggal_selesai ?? $jadwal->tanggal))
+  <div class="banner mb-16">
+    Jadwal ditutup karena tenggat berakhir setelah laporan ditolak.
+    <a href="{{ route('admin.jadwal.edit', $jadwal) }}">Perpanjang atau ubah tanggal kegiatan</a> untuk membuka kembali jadwal.
+  </div>
+@endif
+
 <div class="panel panel-body">
   @if ($jadwal->deskripsi)
     <p class="detail-desc">{{ $jadwal->deskripsi }}</p>
   @endif
   <dl class="detail-grid">
     <div><dt>Kategori pekerjaan</dt><dd>{{ $jadwal->jenisPekerjaan->nama_pekerjaan }}</dd></div>
-    <div><dt>Tanggal kegiatan</dt><dd>{{ $jadwal->tanggal?->format('d-m-Y') }} – {{ $jadwal->tanggal_selesai?->format('d-m-Y') }}</dd></div>
+    <div><dt>Tanggal kegiatan</dt><dd>{{ $jadwal->tanggal?->format('d/m/Y') }} – {{ $jadwal->tanggal_selesai?->format('d/m/Y') }}</dd></div>
     <div><dt>Waktu</dt><dd>{{ $jadwal->waktu_mulai }} - {{ $jadwal->waktu_selesai }}</dd></div>
     <div><dt>Lokasi</dt><dd>{{ $jadwal->lokasi }}</dd></div>
     <div><dt>Kebutuhan anggota</dt><dd>{{ $autoSchedule['assigned_count'] }} / {{ $autoSchedule['required_slots'] }}</dd></div>
@@ -39,6 +46,7 @@
 <div class="panel panel-body">
   <h3>Penugasan Otomatis</h3>
   <p class="note">Rekomendasi mempertimbangkan tugas aktif, riwayat penyelesaian, kecocokan kompetensi, dan bentrok jadwal. Anggota tetap dapat dipilih meski kompetensinya belum dicatat.</p>
+  <p><a href="{{ route('admin.jadwal.penugasan', $jadwal) }}#tambah-anggota" class="btn-outline">Tambah anggota secara manual</a></p>
 
   @if ($autoSchedule['vacancies'] === 0)
     <div class="banner-success">Kebutuhan anggota sudah terpenuhi. Anda tetap dapat melihat atau mengubah penugasan.</div>
@@ -64,7 +72,7 @@
           </label>
         @endforeach
       </fieldset>
-      <button type="submit" class="btn-primary btn-auto">Konfirmasi Penugasan</button>
+      <button type="submit" class="btn-primary btn-auto">Konfirmasi penugasan</button>
     </form>
   @else
     <div class="banner">{{ $autoSchedule['unavailable_reason'] }}</div>
@@ -89,7 +97,7 @@
           <tr>
             <td><span class="cell-name">{{ $item->anggota->nama_lengkap }}</span></td>
             <td>@include('admin.partials.status-badge', ['type' => 'tugas', 'status' => $item->status])</td>
-            <td class="cell-wrap">{{ $item->presensiHarian->map(fn ($presence) => $presence->tanggal->format('d-m').' '.($presence->status === 'hadir' ? 'Hadir' : ucfirst(str_replace('_', ' ', $presence->status))))->implode(', ') ?: 'Belum dicatat' }}</td>
+            <td class="cell-wrap">{{ $item->presensiHarian->map(fn ($presence) => $presence->tanggal->format('d/m').' '.($presence->status === 'hadir' ? 'Hadir' : ucfirst(str_replace('_', ' ', $presence->status))))->implode(', ') ?: 'Belum dicatat' }}</td>
             <td>{{ $item->upah ? 'Rp '.number_format((float) $item->upah->jumlah_upah, 0, ',', '.') : ($item->status === 'completed' ? 'Menunggu semua tugas selesai' : 'Menunggu pekerjaan selesai') }}</td>
             <td>
               <div class="row-actions">

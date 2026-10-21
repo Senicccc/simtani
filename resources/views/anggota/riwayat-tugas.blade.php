@@ -23,7 +23,7 @@
         @forelse ($penugasan as $item)
           <tr>
             <td><span class="cell-name">{{ $item->jadwal->nama_kegiatan ?? '-' }}</span></td>
-            <td class="cell-num">{{ $item->completed_at?->format('d-m-Y H:i') ?? '-' }}</td>
+            <td class="cell-num">{{ $item->completed_at?->format('d/m/Y H:i') ?? '-' }}</td>
             <td>@include('admin.partials.status-badge', ['type' => 'tugas', 'status' => $item->status])</td>
           </tr>
         @empty

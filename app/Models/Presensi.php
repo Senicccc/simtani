@@ -15,6 +15,7 @@ class Presensi extends Model
         'waktu_check_in',
         'waktu_check_out',
         'status',
+        'coverage_accepted',
         'catatan',
     ];
 
@@ -22,6 +23,7 @@ class Presensi extends Model
         'tanggal' => 'date',
         'waktu_check_in' => 'datetime',
         'waktu_check_out' => 'datetime',
+        'coverage_accepted' => 'boolean',
     ];
 
     protected static function booted(): void

@@ -37,10 +37,10 @@
             <td><span class="cell-name">{{ $item->penugasan->anggota->nama_lengkap ?? '-' }}</span></td>
             <td>
               <span class="cell-name">{{ $item->penugasan->jadwal->nama_kegiatan ?? '-' }}</span>
-              <span class="cell-sub">{{ $item->tanggal?->format('d-m-Y') }}</span>
+              <span class="cell-sub">{{ $item->tanggal?->format('d/m/Y') }}</span>
             </td>
-            <td class="cell-num">{{ $item->waktu_check_in?->format('d-m-Y H:i') ?? '-' }}</td>
-            <td class="cell-num">{{ $item->waktu_check_out?->format('d-m-Y H:i') ?? '-' }}</td>
+            <td class="cell-num">{{ $item->waktu_check_in?->format('d/m/Y H:i') ?? '-' }}</td>
+            <td class="cell-num">{{ $item->waktu_check_out?->format('d/m/Y H:i') ?? '-' }}</td>
             <td>
               @include('admin.partials.status-badge', ['type' => 'presensi', 'status' => $item->status])
               @if ($item->status === 'izin')

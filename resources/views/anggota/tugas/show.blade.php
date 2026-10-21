@@ -12,11 +12,11 @@
 </div>
 
 <div class="panel panel-body">
-  <h3>Detail Kegiatan</h3>
+  <h3>Detail kegiatan</h3>
   <p class="note">Periksa tanggal, waktu, lokasi, dan jumlah hasil kerja sebelum mencatat presensi.</p>
   <dl class="detail-grid">
     <div><dt>Jenis pekerjaan</dt><dd>{{ $penugasan->jadwal->jenisPekerjaan->nama_pekerjaan }}</dd></div>
-    <div><dt>Tanggal kegiatan</dt><dd>{{ $penugasan->tanggalMulaiEfektif()->format('d-m-Y') }} – {{ $penugasan->tanggalSelesaiEfektif()->format('d-m-Y') }}</dd></div>
+    <div><dt>Tanggal kegiatan</dt><dd>{{ $penugasan->tanggalMulaiEfektif()->format('d/m/Y') }} – {{ $penugasan->tanggalSelesaiEfektif()->format('d/m/Y') }}</dd></div>
     <div><dt>Waktu</dt><dd>{{ $penugasan->jadwal->waktu_mulai }} - {{ $penugasan->jadwal->waktu_selesai }}</dd></div>
     <div><dt>Lokasi</dt><dd>{{ $penugasan->jadwal->lokasi }}</dd></div>
     <div><dt>Jumlah hasil kerja</dt><dd>{{ $penugasan->jadwal->jumlah_satuan }} {{ $penugasan->jadwal->jenisPekerjaan->satuan }}</dd></div>
@@ -31,7 +31,7 @@
     @php($dailyPresence = $penugasan->presensiHarian->first(fn ($presence) => $presence->tanggal->isSameDay($date)))
     <div class="attendance-day">
       <div class="attendance-day-head">
-        <strong>{{ $date->format('d-m-Y') }}</strong>
+        <strong>{{ $date->format('d/m/Y') }}</strong>
         @if($date->isToday())<span class="badge-muted">Hari ini</span>@endif
         @if($dailyPresence)@include('admin.partials.status-badge', ['type' => 'presensi', 'status' => $dailyPresence->status])@endif
       </div>
@@ -71,7 +71,7 @@
     <p class="amount">Rp {{ number_format((float) $penugasan->upah->jumlah_upah, 0, ',', '.') }}</p>
     <p class="note">
       @include('admin.partials.status-badge', ['type' => 'bayar', 'status' => $penugasan->upah->status_pembayaran])
-      Pembayaran: {{ $penugasan->upah->waktu_pembayaran?->format('d-m-Y H:i') ?? 'Belum dibayar' }}
+      Pembayaran: {{ $penugasan->upah->waktu_pembayaran?->format('d/m/Y H:i') ?? 'Belum dibayar' }}
     </p>
   @else
     @if((float) $penugasan->jadwal->total_upah > 0)
@@ -105,10 +105,7 @@
 @endif
 
 <div class="page-actions page-actions--bottom">
-  @if($penugasan->status === 'in_progress')
-    <a href="{{ route('anggota.tugas.complete.form', $penugasan) }}" class="btn-primary attendance-button">Laporkan Pekerjaan Selesai</a>
-  @endif
-  @if(!in_array($penugasan->status, ['completed', 'cancelled'], true))
+  @if($penugasan->status === 'assigned')
     <a href="{{ route('anggota.permintaan-perubahan.create', ['penugasan_id' => $penugasan->id]) }}" class="btn-outline">Minta Perubahan Tugas</a>
   @endif
   <a href="{{ route('anggota.hubungi-admin') }}" class="btn-outline">Hubungi Admin jika Perlu Bantuan</a>

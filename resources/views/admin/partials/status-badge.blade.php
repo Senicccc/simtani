@@ -12,6 +12,7 @@
       'in_progress'          => ['Sedang dikerjakan', 'badge'],
       'waiting_verification' => ['Menunggu pemeriksaan', 'badge-warn'],
       'completed'            => ['Selesai', 'badge'],
+      'rejected'             => ['Laporan ditolak', 'badge-danger'],
       'cancelled'            => ['Dibatalkan', 'badge-danger'],
     ],
     'presensi' => [

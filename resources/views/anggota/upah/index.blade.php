@@ -24,7 +24,7 @@
       <tbody>
         @forelse ($menungguVerifikasi as $penugasan)
           <tr>
-            <td class="cell-num">{{ $penugasan->completed_at?->format('d-m-Y') ?? '-' }}</td>
+            <td class="cell-num">{{ $penugasan->completed_at?->format('d/m/Y') ?? '-' }}</td>
             <td><a href="{{ route('anggota.tugas.show', $penugasan) }}" class="table-action">{{ $penugasan->jadwal->nama_kegiatan }}</a></td>
             <td>
               Rp {{ number_format((float) $penugasan->jadwal->total_upah, 0, ',', '.') }}
@@ -57,7 +57,7 @@
       <tbody>
         @forelse ($upah as $item)
           <tr>
-            <td class="cell-num">{{ $item->penugasan->jadwal->tanggal?->format('d-m-Y') ?? '-' }}</td>
+            <td class="cell-num">{{ $item->penugasan->jadwal->tanggal?->format('d/m/Y') ?? '-' }}</td>
             <td><a href="{{ route('anggota.tugas.show', $item->penugasan) }}" class="table-action">{{ $item->penugasan->jadwal->nama_kegiatan ?? '-' }}</a></td>
             <td>@include('admin.partials.status-badge', ['type' => 'presensi', 'status' => $item->penugasan->presensi?->status ?? 'belum'])</td>
             <td class="cell-num">Rp {{ number_format((float) $item->jumlah_upah, 0, ',', '.') }}</td>
@@ -65,7 +65,7 @@
             <td>
               @if ($item->metode_pembayaran || $item->waktu_pembayaran)
                 <span class="cell-name">{{ $item->metode_pembayaran ?? '-' }}</span>
-                <span class="cell-sub">{{ $item->waktu_pembayaran?->format('d-m-Y H:i') ?? '-' }}</span>
+                <span class="cell-sub">{{ $item->waktu_pembayaran?->format('d/m/Y H:i') ?? '-' }}</span>
               @else
                 -
               @endif

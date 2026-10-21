@@ -45,7 +45,7 @@
               <span class="cell-sub">{{ $item->jenisPekerjaan->nama_pekerjaan ?? '-' }}</span>
             </td>
             <td class="cell-num">
-              {{ $item->tanggal?->format('d-m-Y') }}@if($item->tanggal_selesai && ! $item->tanggal_selesai->isSameDay($item->tanggal)) – {{ $item->tanggal_selesai->format('d-m-Y') }}@endif
+              {{ $item->tanggal?->format('d/m/Y') }}@if($item->tanggal_selesai && ! $item->tanggal_selesai->isSameDay($item->tanggal)) – {{ $item->tanggal_selesai->format('d/m/Y') }}@endif
             </td>
             <td>@include('admin.partials.status-badge', ['type' => 'jadwal', 'status' => $item->status])</td>
             <td>

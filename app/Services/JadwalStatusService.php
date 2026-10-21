@@ -21,6 +21,17 @@ class JadwalStatusService
             ->with('presensiHarian')
             ->where('status', '!=', 'cancelled')
             ->get();
+        $deadlinePassedAfterRejection = today()->greaterThan($jadwal->tanggal_selesai ?? $jadwal->tanggal)
+            && $assignments->contains(fn (Penugasan $assignment): bool => $assignment->status === 'rejected');
+
+        if ($deadlinePassedAfterRejection) {
+            if ($jadwal->status !== 'completed') {
+                $jadwal->update(['status' => 'completed']);
+            }
+
+            return;
+        }
+
         $coverageComplete = $assignments->isNotEmpty();
 
         foreach (CarbonPeriod::create($jadwal->tanggal, $jadwal->tanggal_selesai ?? $jadwal->tanggal) as $date) {
@@ -32,12 +43,17 @@ class JadwalStatusService
                 ))->count();
 
             if ($coveredCount < $jadwal->jumlah_orang_dibutuhkan) {
-                $coverageComplete = false;
-                break;
+                $acceptedCoverage = $assignments->contains(fn (Penugasan $assignment): bool => $this->coversDate($assignment, $date)
+                    && $this->presenceForDate($assignment, $date)?->coverage_accepted);
+
+                if (! $acceptedCoverage || $coveredCount < 1) {
+                    $coverageComplete = false;
+                    break;
+                }
             }
         }
 
-        if ($coverageComplete && $assignments->every(fn (Penugasan $assignment): bool => $assignment->status === 'completed')) {
+        if ($coverageComplete && $assignments->every(fn (Penugasan $assignment): bool => in_array($assignment->status, ['completed', 'rejected'], true))) {
             $status = 'completed';
         } elseif ($assignments->contains(fn (Penugasan $assignment): bool => in_array($assignment->status, ['in_progress', 'waiting_verification', 'completed'], true))
             || today()->greaterThanOrEqualTo($jadwal->tanggal)) {
@@ -52,7 +68,7 @@ class JadwalStatusService
     }
 
     /**
-     * @return Collection<int, array{tanggal: Carbon, anggota: int, kebutuhan: int, izin: int}>
+     * @return Collection<int, array{tanggal: Carbon, anggota: int, kebutuhan: int, izin: int, diterima: bool}>
      */
     public function dailyCoverage(Jadwal $jadwal): Collection
     {
@@ -69,12 +85,14 @@ class JadwalStatusService
                     ['izin', 'tidak_hadir'],
                     true,
                 ));
+                $accepted = $excused->contains(fn (Penugasan $assignment): bool => $this->presenceForDate($assignment, $date)?->coverage_accepted === true);
 
                 return [
                     'tanggal' => $date,
                     'anggota' => $onDate->count() - $excused->count(),
                     'kebutuhan' => (int) $jadwal->jumlah_orang_dibutuhkan,
                     'izin' => $excused->count(),
+                    'diterima' => $accepted,
                 ];
             });
     }
@@ -82,7 +100,7 @@ class JadwalStatusService
     public function pendingReplacementSlots(Jadwal $jadwal): int
     {
         return $this->dailyCoverage($jadwal)
-            ->sum(fn (array $day): int => $day['izin'] > 0
+            ->sum(fn (array $day): int => $day['izin'] > 0 && ! $day['diterima']
                 ? max(0, $day['kebutuhan'] - $day['anggota'])
                 : 0);
     }

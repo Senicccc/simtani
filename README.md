@@ -66,7 +66,7 @@ Each developer should use a separate local database. After pulling the latest pr
 
 | Role | Email | Password |
 |---|---|---|
-| Administrator | `admin.david@simtani.local` | `david12345` |
+| Administrator | `admin1@simtani.test` | `password` |
 | Member | `dedi.prasetyo@simtani.local` | `anggota123` |
 
 The seeder also creates active and inactive members, job categories, schedules, assignments, attendance, wages, and related change requests. These accounts and records are for local development and demonstrations only.

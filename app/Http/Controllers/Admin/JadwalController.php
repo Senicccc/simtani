@@ -16,6 +16,8 @@ use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use RuntimeException;
 
@@ -102,7 +104,7 @@ class JadwalController extends Controller
             })->count();
 
             if ($coveredCount > (int) $request->jumlah_orang_dibutuhkan) {
-                return back()->withInput()->withErrors(['jumlah_orang_dibutuhkan' => 'Jumlah kebutuhan tidak boleh lebih sedikit dari penugasan yang sudah ada pada tanggal '.$date->format('d-m-Y').'.']);
+                return back()->withInput()->withErrors(['jumlah_orang_dibutuhkan' => 'Jumlah kebutuhan tidak boleh lebih sedikit dari penugasan yang sudah ada pada tanggal '.$date->format('d/m/Y').'.']);
             }
         }
 
@@ -125,23 +127,47 @@ class JadwalController extends Controller
             return back()->withInput()->withErrors(['total_upah' => 'Total upah tidak dapat diubah karena sudah tercatat pada pembayaran anggota.']);
         }
 
-        $jadwal->update([
-            'jenis_pekerjaan_id' => $request->jenis_pekerjaan_id,
-            'nama_kegiatan' => $request->nama_kegiatan,
-            'deskripsi' => $request->deskripsi,
-            'lokasi' => $request->lokasi,
-            'tanggal' => $request->tanggal,
-            'tanggal_selesai' => $request->tanggal_selesai,
-            'waktu_mulai' => $request->waktu_mulai,
-            'waktu_selesai' => $request->waktu_selesai,
-            'jumlah_orang_dibutuhkan' => $request->jumlah_orang_dibutuhkan,
-            'jumlah_satuan' => $request->jumlah_satuan,
-            'total_upah' => $request->total_upah,
-            'perlu_verifikasi' => $request->boolean('perlu_verifikasi'),
-            'metode_penjadwalan' => $request->metode_penjadwalan ?? $jadwal->metode_penjadwalan,
-            'status' => $request->status === 'cancelled' ? 'cancelled' : $jadwal->status,
-        ]);
-        $statuses->refresh($jadwal);
+        $reopensRejectedSchedule = $jadwal->status === 'completed'
+            && today()->greaterThan($jadwal->tanggal_selesai ?? $jadwal->tanggal)
+            && Carbon::parse($request->tanggal_selesai)->greaterThanOrEqualTo(today())
+            && $jadwal->penugasan()->where('status', 'rejected')->exists();
+
+        if ($reopensRejectedSchedule && $jadwal->penugasan()->whereHas('upah')->exists()) {
+            return back()->withInput()->withErrors([
+                'tanggal_selesai' => 'Tenggat tidak dapat diperpanjang karena upah sudah tercatat. Hubungi admin keuangan sebelum membuka kembali jadwal.',
+            ]);
+        }
+
+        DB::transaction(function () use ($jadwal, $request, $statuses, $reopensRejectedSchedule): void {
+            if ($reopensRejectedSchedule) {
+                $jadwal->penugasan()->where('status', 'rejected')->get()->each(function ($assignment): void {
+                    $assignment->update([
+                        'status' => 'cancelled',
+                        'catatan_perubahan' => trim(($assignment->catatan_perubahan ? $assignment->catatan_perubahan."\n" : '')
+                            .'Laporan ditolak dan tugas lama ditutup; jadwal dibuka kembali dengan tenggat baru. Tambahkan penugasan baru untuk melanjutkan.'),
+                    ]);
+                });
+            }
+
+            $jadwal->update([
+                'jenis_pekerjaan_id' => $request->jenis_pekerjaan_id,
+                'nama_kegiatan' => $request->nama_kegiatan,
+                'deskripsi' => $request->deskripsi,
+                'lokasi' => $request->lokasi,
+                'tanggal' => $request->tanggal,
+                'tanggal_selesai' => $request->tanggal_selesai,
+                'waktu_mulai' => $request->waktu_mulai,
+                'waktu_selesai' => $request->waktu_selesai,
+                'jumlah_orang_dibutuhkan' => $request->jumlah_orang_dibutuhkan,
+                'jumlah_satuan' => $request->jumlah_satuan,
+                'total_upah' => $request->total_upah,
+                'perlu_verifikasi' => $request->boolean('perlu_verifikasi'),
+                'metode_penjadwalan' => $request->metode_penjadwalan ?? $jadwal->metode_penjadwalan,
+                'status' => $request->status === 'cancelled' ? 'cancelled' : ($reopensRejectedSchedule ? 'scheduled' : $jadwal->status),
+            ]);
+
+            $statuses->refresh($jadwal);
+        });
 
         return redirect()->route('admin.jadwal.show', $jadwal)->with('success', 'Jadwal berhasil diperbarui.');
     }

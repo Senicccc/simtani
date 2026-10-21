@@ -11,6 +11,7 @@ use App\Models\Presensi;
 use App\Models\Upah;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
@@ -20,9 +21,9 @@ class DatabaseSeeder extends Seeder
         $admin = User::updateOrCreate(
             ['nomor_anggota' => 'ADM-001'],
             [
-                'nama_lengkap' => 'Bang David',
-                'email' => 'admin.david@simtani.local',
-                'password' => Hash::make('david12345'),
+                'nama_lengkap' => 'Admin SIMTANI',
+                'email' => 'admin1@simtani.test',
+                'password' => Hash::make('password'),
                 'role' => 'admin',
                 'status_aktif' => true,
                 'alamat' => 'Sekretariat Kelompok Tani Makmur',
@@ -97,42 +98,51 @@ class DatabaseSeeder extends Seeder
 
         $scheduleData = [
             'Panen Padi Petak Utara' => [
-                'job' => 'Panen', 'date' => today()->subDays(7), 'start' => '07:00', 'end' => '12:00',
-                'needed' => 2, 'quantity' => 3, 'wage' => 135000, 'status' => 'completed', 'members' => ['ANG-001', 'ANG-003'],
+                'job' => 'Panen', 'date' => '2026-10-19', 'start' => '07:00', 'end' => '12:00',
+                'needed' => 2, 'quantity' => 3, 'total_wage' => 270000, 'status' => 'completed',
+            ],
+            'Penanaman Bibit Petak Selatan' => [
+                'job' => 'Penanaman', 'date' => '2026-10-20', 'start' => '07:00', 'end' => '11:30',
+                'needed' => 2, 'quantity' => 2, 'total_wage' => 240000, 'status' => 'completed',
+            ],
+            'Pengendalian Hama Blok Barat' => [
+                'job' => 'Pengendalian Hama', 'date' => '2026-10-20', 'start' => '13:00', 'end' => '16:00',
+                'needed' => 1, 'quantity' => 2, 'total_wage' => 160000, 'status' => 'completed',
+            ],
+            'Pembersihan Saluran Irigasi' => [
+                'job' => 'Pembersihan Lahan', 'date' => '2026-10-20', 'start' => '07:30', 'end' => '10:30',
+                'needed' => 2, 'quantity' => 1, 'total_wage' => 180000, 'status' => 'cancelled',
             ],
             'Pemupukan Blok Timur' => [
-                'job' => 'Pemupukan', 'date' => today(), 'start' => '08:00', 'end' => '17:00',
-                'needed' => 2, 'quantity' => 2, 'wage' => 280000, 'status' => 'ongoing', 'members' => ['ANG-002', 'ANG-004'],
+                'job' => 'Pemupukan', 'date' => '2026-10-21', 'start' => '08:00', 'end' => '16:00',
+                'needed' => 2, 'quantity' => 2, 'total_wage' => 280000, 'status' => 'ongoing',
             ],
-            'Persiapan Tanam Musim Hujan' => [
-                'job' => 'Penanaman', 'date' => today()->addDays(2), 'start' => '07:30', 'end' => '12:00',
-                'needed' => 3, 'quantity' => 4, 'wage' => 700000, 'status' => 'scheduled', 'members' => ['ANG-001', 'ANG-005'],
+            'Persiapan Tanam Petak Utara' => [
+                'job' => 'Penanaman', 'date' => '2026-10-22', 'start' => '07:30', 'end' => '12:00',
+                'needed' => 1, 'quantity' => 2, 'total_wage' => 120000, 'status' => 'scheduled',
             ],
-            'Pengendalian Hama Lahan Selatan' => [
-                'job' => 'Pengendalian Hama', 'date' => today()->addDays(3), 'start' => '13:00', 'end' => '16:00',
-                'needed' => 2, 'quantity' => 2, 'wage' => 190000, 'status' => 'scheduled', 'members' => ['ANG-003', 'ANG-007'],
-            ],
-            'Pemupukan Petak Barat' => [
-                'job' => 'Pemupukan', 'date' => today()->addDays(6), 'start' => '08:00', 'end' => '11:00',
-                'needed' => 2, 'quantity' => 3, 'wage' => 420000, 'status' => 'scheduled', 'members' => [],
+            'Panen Sayuran Petak Selatan' => [
+                'job' => 'Panen', 'date' => '2026-10-25', 'start' => '06:30', 'end' => '11:30',
+                'needed' => 1, 'quantity' => 4, 'total_wage' => 180000, 'status' => 'scheduled',
             ],
         ];
 
         $schedules = [];
         foreach ($scheduleData as $name => $details) {
+            $date = Carbon::parse($details['date']);
             $schedules[$name] = Jadwal::updateOrCreate(
                 ['nama_kegiatan' => $name],
                 [
                     'jenis_pekerjaan_id' => $jobs[$details['job']]->id,
                     'deskripsi' => $jobData[$details['job']]['deskripsi'],
                     'lokasi' => 'Lahan Kelompok Tani Makmur',
-                    'tanggal' => $details['date']->toDateString(),
-                    'tanggal_selesai' => $details['date']->toDateString(),
+                    'tanggal' => $date->toDateString(),
+                    'tanggal_selesai' => $date->toDateString(),
                     'waktu_mulai' => $details['start'],
                     'waktu_selesai' => $details['end'],
                     'jumlah_orang_dibutuhkan' => $details['needed'],
                     'jumlah_satuan' => $details['quantity'],
-                    'total_upah' => $details['wage'] * $details['needed'],
+                    'total_upah' => $details['total_wage'],
                     'perlu_verifikasi' => true,
                     'metode_penjadwalan' => 'manual',
                     'status' => $details['status'],
@@ -141,99 +151,134 @@ class DatabaseSeeder extends Seeder
             );
         }
 
-        $assignment = static function (Jadwal $schedule, User $member, string $status) use ($admin): Penugasan {
+        $createAssignment = static function (
+            Jadwal $schedule,
+            User $member,
+            string $status,
+            ?User $originalMember = null,
+            ?string $source = null,
+        ) use ($admin): Penugasan {
             $startedAt = $schedule->tanggal->copy()->setTimeFromTimeString($schedule->waktu_mulai ?? '08:00');
-            $completedAt = $schedule->tanggal->isToday()
-                ? now()->subMinutes(30)
-                : $schedule->tanggal->copy()->setTimeFromTimeString($schedule->waktu_selesai ?? '16:00');
+            $completedAt = $schedule->tanggal->copy()->setTimeFromTimeString($schedule->waktu_selesai ?? '16:00');
+            $assignedAt = $schedule->tanggal->copy()->subDays(2);
+            if ($assignedAt->greaterThan(today())) {
+                $assignedAt = today();
+            }
+            $isCompleted = in_array($status, ['waiting_verification', 'completed', 'rejected'], true);
 
             return Penugasan::updateOrCreate(
                 ['jadwal_id' => $schedule->id, 'anggota_id' => $member->id],
                 [
-                    'original_anggota_id' => $member->id,
+                    'original_anggota_id' => ($originalMember ?? $member)->id,
                     'status' => $status,
-                    'sumber_penugasan' => 'manual',
-                    'assigned_at' => $schedule->tanggal->copy()->subDays(2)->setTime(9, 0),
-                    'started_at' => in_array($status, ['in_progress', 'waiting_verification', 'completed'], true) ? $startedAt : null,
-                    'completed_at' => in_array($status, ['waiting_verification', 'completed'], true) ? $completedAt : null,
+                    'sumber_penugasan' => $source ?? 'manual',
+                    'assigned_at' => $assignedAt->setTime(9, 0),
+                    'started_at' => in_array($status, ['in_progress', 'waiting_verification', 'completed', 'rejected'], true) ? $startedAt : null,
+                    'completed_at' => $isCompleted ? $completedAt : null,
                     'verified_by' => $status === 'completed' ? $admin->id : null,
                     'verified_at' => $status === 'completed' ? $completedAt->copy()->addMinutes(15) : null,
+                    'catatan_verifikasi' => $status === 'rejected' ? 'Bukti pekerjaan tidak sesuai kondisi di lapangan.' : null,
                 ],
             );
         };
 
-        $completedAssignments = [];
-        foreach (['ANG-001', 'ANG-003'] as $memberNumber) {
-            $completedAssignments[] = $assignment($schedules['Panen Padi Petak Utara'], $members[$memberNumber], 'completed');
-        }
-
-        $attendanceStart = today()->subDays(7)->setTime(7, 0);
-        $totalWageCents = (int) round((float) $schedules['Panen Padi Petak Utara']->total_upah * 100);
-        $shareCents = intdiv($totalWageCents, count($completedAssignments));
-        $remainderCents = $totalWageCents % count($completedAssignments);
-        foreach ($completedAssignments as $index => $completedAssignment) {
+        $recordAttendance = static function (
+            Penugasan $assignment,
+            string $status,
+            string $checkIn,
+            ?string $checkOut,
+            string $note,
+        ): void {
             Presensi::updateOrCreate(
-                ['penugasan_id' => $completedAssignment->id],
+                ['penugasan_id' => $assignment->id],
                 [
-                    'waktu_check_in' => $attendanceStart,
-                    'waktu_check_out' => $attendanceStart->copy()->addHours(5),
-                    'status' => 'hadir',
-                    'catatan' => 'Hadir sampai pekerjaan selesai.',
+                    'tanggal' => $assignment->jadwal->tanggal->toDateString(),
+                    'waktu_check_in' => Carbon::parse($assignment->jadwal->tanggal->toDateString().' '.$checkIn),
+                    'waktu_check_out' => $checkOut
+                        ? Carbon::parse($assignment->jadwal->tanggal->toDateString().' '.$checkOut)
+                        : null,
+                    'status' => $status,
+                    'catatan' => $note,
                 ],
             );
+        };
 
-            $paidAt = $index === 0 ? today()->subDays(5)->setTime(15, 30) : null;
+        $recordWage = static function (
+            Penugasan $assignment,
+            float $amount,
+            bool $paid,
+            User $admin,
+        ): void {
+            $paidAt = $paid ? Carbon::parse('2026-10-21 09:00') : null;
             Upah::updateOrCreate(
-                ['penugasan_id' => $completedAssignment->id],
+                ['penugasan_id' => $assignment->id],
                 [
                     'mode_perhitungan' => 'manual',
                     'tarif_per_satuan' => null,
                     'jumlah_satuan' => null,
-                    'jumlah_upah' => ($shareCents + ($index < $remainderCents ? 1 : 0)) / 100,
-                    'status_pembayaran' => $paidAt ? 'sudah_dibayar' : 'belum_dibayar',
-                    'metode_pembayaran' => $paidAt ? 'Transfer bank' : null,
+                    'jumlah_upah' => $amount,
+                    'status_pembayaran' => $paid ? 'sudah_dibayar' : 'belum_dibayar',
+                    'metode_pembayaran' => $paid ? 'Transfer bank' : null,
                     'tanggal_pembayaran' => $paidAt?->toDateString(),
                     'waktu_pembayaran' => $paidAt,
-                    'dibayar_oleh' => $paidAt ? $admin->id : null,
-                    'catatan' => 'Nominal ditetapkan saat tugas dibuat.',
+                    'dibayar_oleh' => $paid ? $admin->id : null,
+                    'catatan' => $paid ? 'Dibayarkan setelah verifikasi pekerjaan.' : 'Menunggu penyelesaian dan verifikasi tugas.',
                 ],
             );
-        }
+        };
 
-        $waitingAssignment = $assignment($schedules['Pemupukan Blok Timur'], $members['ANG-002'], 'waiting_verification');
-        Presensi::updateOrCreate(
-            ['penugasan_id' => $waitingAssignment->id],
-            [
-                'waktu_check_in' => $waitingAssignment->started_at,
-                'waktu_check_out' => $waitingAssignment->completed_at,
-                'status' => 'hadir',
-                'catatan' => 'Pekerjaan selesai, menunggu verifikasi admin.',
-            ],
-        );
-
-        $inProgressAssignment = $assignment($schedules['Pemupukan Blok Timur'], $members['ANG-004'], 'in_progress');
-        Presensi::updateOrCreate(
-            ['penugasan_id' => $inProgressAssignment->id],
-            [
-                'waktu_check_in' => $inProgressAssignment->started_at,
-                'status' => 'hadir',
-                'catatan' => 'Sedang bekerja di lokasi.',
-            ],
-        );
-
-        $exchangeSource = null;
+        $paidAssignments = [];
         foreach ([
-            ['schedule' => 'Persiapan Tanam Musim Hujan', 'member' => 'ANG-001'],
-            ['schedule' => 'Persiapan Tanam Musim Hujan', 'member' => 'ANG-005'],
+            ['schedule' => 'Panen Padi Petak Utara', 'member' => 'ANG-001'],
+            ['schedule' => 'Panen Padi Petak Utara', 'member' => 'ANG-003'],
+            ['schedule' => 'Penanaman Bibit Petak Selatan', 'member' => 'ANG-002'],
+            ['schedule' => 'Penanaman Bibit Petak Selatan', 'member' => 'ANG-005'],
         ] as $details) {
-            $scheduledAssignment = $assignment($schedules[$details['schedule']], $members[$details['member']], 'assigned');
-            if ($details['member'] === 'ANG-001') {
-                $exchangeSource = $scheduledAssignment;
-            }
+            $completed = $createAssignment($schedules[$details['schedule']], $members[$details['member']], 'completed');
+            $recordAttendance($completed, 'hadir', '07:00', '11:30', 'Pekerjaan selesai dan telah diperiksa.');
+            $paidAssignments[] = $completed;
         }
+
+        foreach ($paidAssignments as $completed) {
+            $recordWage($completed, (float) $completed->jadwal->total_upah / 2, true, $admin);
+        }
+
+        $rejectedAssignment = $createAssignment(
+            $schedules['Pengendalian Hama Blok Barat'],
+            $members['ANG-004'],
+            'rejected',
+        );
+        $recordAttendance($rejectedAssignment, 'tidak_hadir', '13:00', '16:00', 'Laporan ditolak: bukti pekerjaan tidak sesuai.');
+
+        $replacementAssignment = $createAssignment(
+            $schedules['Pengendalian Hama Blok Barat'],
+            $members['ANG-006'],
+            'completed',
+            $members['ANG-004'],
+            'hasil_perubahan',
+        );
+        $replacementAssignment->update(['catatan_perubahan' => 'Menggantikan anggota yang laporan pekerjaannya ditolak.']);
+        $recordAttendance($replacementAssignment, 'hadir', '13:00', '16:00', 'Tugas pengganti selesai dan telah diperiksa.');
+        $recordWage($replacementAssignment, 160000, false, $admin);
+
+        $cancelledAssignment = $createAssignment(
+            $schedules['Pembersihan Saluran Irigasi'],
+            $members['ANG-007'],
+            'cancelled',
+        );
+        $cancelledAssignment->update(['catatan_perubahan' => 'Kegiatan dibatalkan karena hujan deras dan saluran tidak aman.']);
+
+        $waitingAssignment = $createAssignment($schedules['Pemupukan Blok Timur'], $members['ANG-002'], 'waiting_verification');
+        $recordAttendance($waitingAssignment, 'hadir', '08:00', '10:30', 'Laporan pekerjaan dikirim dan menunggu verifikasi admin.');
+
+        $inProgressAssignment = $createAssignment($schedules['Pemupukan Blok Timur'], $members['ANG-004'], 'in_progress');
+        $recordAttendance($inProgressAssignment, 'hadir', '08:15', null, 'Sedang bekerja di lokasi.');
+
+        $futureAssignment = $createAssignment($schedules['Persiapan Tanam Petak Utara'], $members['ANG-001'], 'assigned');
+        $createAssignment($schedules['Panen Sayuran Petak Selatan'], $members['ANG-005'], 'assigned');
 
         PermintaanPerubahan::updateOrCreate(
-            ['penugasan_id' => $exchangeSource->id],
+            ['penugasan_id' => $futureAssignment->id],
             [
                 'diajukan_oleh' => $members['ANG-001']->id,
                 'jenis_permintaan' => 'sanggah',

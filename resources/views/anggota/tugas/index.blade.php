@@ -28,11 +28,11 @@
       </div>
       <dl class="detail-grid">
         <div><dt>Kategori</dt><dd>{{ $item->jadwal->jenisPekerjaan->nama_pekerjaan }}</dd></div>
-        <div><dt>Tanggal</dt><dd>{{ $item->tanggalMulaiEfektif()->format('d-m-Y') }} – {{ $item->tanggalSelesaiEfektif()->format('d-m-Y') }}</dd></div>
+        <div><dt>Tanggal</dt><dd>{{ $item->tanggalMulaiEfektif()->format('d/m/Y') }} – {{ $item->tanggalSelesaiEfektif()->format('d/m/Y') }}</dd></div>
         <div><dt>Lokasi</dt><dd>{{ $item->jadwal->lokasi }}</dd></div>
       </dl>
       <div class="task-card__action">
-        <a href="{{ route('anggota.tugas.show', $item) }}" class="btn-primary btn-auto attendance-button">Lihat Detail Tugas dan Presensi</a>
+        <a href="{{ route('anggota.tugas.show', $item) }}" class="btn-primary btn-auto attendance-button">Lihat detail tugas dan presensi</a>
       </div>
     </article>
   @empty

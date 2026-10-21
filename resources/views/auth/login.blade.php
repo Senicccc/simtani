@@ -6,16 +6,12 @@
 <title>SIMTANI | Masuk</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{{ asset('css/style.css') }}">
 </head>
 <body>
   <div id="login-screen">
-    <div class="login-brand">
-      <div class="mark"><img src="{{ asset('images/Logo.jpg') }}" alt="Logo SIMTANI"></div>
-      <h1>SIMTANI</h1>
-      <p>Kelola kegiatan kelompok tani, jadwal, presensi, dan pembayaran upah dalam satu tempat.</p>
-    </div>
+    <div class="login-brand" aria-hidden="true"></div>
     <div class="login-form">
       <h2>Masuk ke akun</h2>
 

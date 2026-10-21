@@ -13,7 +13,7 @@
   @forelse($memberTasks as $item)
     <article class="stat-card member-task-card">
       <h3>{{ $item->jadwal->nama_kegiatan }}</h3>
-      <p><strong>Tanggal:</strong> {{ $item->tanggalMulaiEfektif()->format('d-m-Y') }} – {{ $item->tanggalSelesaiEfektif()->format('d-m-Y') }}</p>
+      <p><strong>Tanggal:</strong> {{ $item->tanggalMulaiEfektif()->format('d/m/Y') }} – {{ $item->tanggalSelesaiEfektif()->format('d/m/Y') }}</p>
       <p><strong>Lokasi:</strong> {{ $item->jadwal->lokasi }}</p>
       <a href="{{ route('anggota.tugas.show', $item) }}" class="btn-primary attendance-button">Lihat detail tugas dan presensi</a>
     </article>

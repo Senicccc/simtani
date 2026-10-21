@@ -7,7 +7,7 @@
     <h2>Laporkan Tugas Selesai</h2>
     <p class="meta-row">
       <span>{{ $penugasan->jadwal->nama_kegiatan }}</span>
-      <span>{{ $penugasan->tanggalMulaiEfektif()->format('d-m-Y') }} – {{ $penugasan->tanggalSelesaiEfektif()->format('d-m-Y') }}</span>
+      <span>{{ $penugasan->tanggalMulaiEfektif()->format('d/m/Y') }} – {{ $penugasan->tanggalSelesaiEfektif()->format('d/m/Y') }}</span>
     </p>
   </div>
   <a href="{{ route('anggota.tugas.show', $penugasan) }}" class="btn-outline">Kembali ke detail tugas</a>

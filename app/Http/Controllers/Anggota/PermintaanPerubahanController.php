@@ -30,6 +30,7 @@ class PermintaanPerubahanController extends Controller
         $penugasan = Penugasan::with(['jadwal.jenisPekerjaan'])
             ->where('anggota_id', Auth::id())
             ->where('status', 'assigned')
+            ->whereDoesntHave('permintaanPerubahan', fn ($query) => $query->where('status', 'pending'))
             ->get();
         $availableTargets = collect();
         $member = Auth::user();
@@ -57,11 +58,15 @@ class PermintaanPerubahanController extends Controller
         ]);
         $penugasan = Penugasan::with('jadwal')->findOrFail($validated['penugasan_id']);
         abort_unless($penugasan->anggota_id === Auth::id(), 403);
-        if ($penugasan->status !== 'assigned') {
+        if ($penugasan->status !== 'assigned' || $penugasan->presensiHarian()->whereNotNull('waktu_check_in')->exists()) {
             return back()->withInput()->withErrors(['penugasan_id' => 'Permintaan hanya dapat diajukan untuk tugas yang belum dimulai.']);
         }
         if (! Auth::user()->status_aktif) {
             return back()->withInput()->withErrors(['penugasan_id' => 'Akun anggota tidak aktif. Hubungi admin.']);
+        }
+
+        if ($penugasan->permintaanPerubahan()->where('status', 'pending')->exists()) {
+            return back()->withInput()->withErrors(['penugasan_id' => 'Tugas ini sudah memiliki permintaan perubahan yang menunggu keputusan admin.']);
         }
 
         $targetSchedule = isset($validated['target_jadwal_id'])
@@ -69,12 +74,6 @@ class PermintaanPerubahanController extends Controller
             : null;
         if ($targetSchedule && ! $availableSchedules->isAvailable(Auth::user(), $targetSchedule, $penugasan->jadwal_id, $conflicts)) {
             return back()->withInput()->withErrors(['target_jadwal_id' => 'Jadwal tujuan tidak tersedia atau tidak sesuai kompetensi dan waktu. Pilih jadwal lain.']);
-        }
-
-        if (PermintaanPerubahan::where('penugasan_id', $penugasan->id)
-            ->where('status', 'pending')
-            ->exists()) {
-            return back()->withInput()->withErrors(['penugasan_id' => 'Permintaan untuk tugas ini masih menunggu keputusan admin.']);
         }
 
         PermintaanPerubahan::create([

@@ -63,6 +63,6 @@ class PresensiController extends Controller
             return back()->withInput()->withErrors(['presensi' => $exception->getMessage()]);
         }
 
-        return redirect()->route('anggota.tugas.show', $penugasan)->with('success', 'Presensi tanggal '.$date->format('d-m-Y').' berhasil dicatat.');
+        return redirect()->route('anggota.tugas.show', $penugasan)->with('success', 'Presensi tanggal '.$date->format('d/m/Y').' berhasil dicatat.');
     }
 }

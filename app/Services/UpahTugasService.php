@@ -16,7 +16,12 @@ class UpahTugasService
             ->orderBy('id')
             ->get();
 
-        if ($assignments->isEmpty() || $assignments->contains(fn (Penugasan $assignment): bool => $assignment->status !== 'completed')) {
+        if ($assignments->isEmpty() || $assignments->contains(fn (Penugasan $assignment): bool => ! in_array($assignment->status, ['completed', 'rejected'], true))) {
+            return false;
+        }
+
+        $eligibleAssignments = $assignments->where('status', 'completed')->values();
+        if ($eligibleAssignments->isEmpty()) {
             return false;
         }
 
@@ -25,10 +30,10 @@ class UpahTugasService
             throw new RuntimeException('Total upah kegiatan belum ditentukan. Minta admin melengkapi total upah sebelum menyelesaikan tugas.');
         }
 
-        $shareCents = intdiv($totalCents, $assignments->count());
-        $remainderCents = $totalCents % $assignments->count();
+        $shareCents = intdiv($totalCents, $eligibleAssignments->count());
+        $remainderCents = $totalCents % $eligibleAssignments->count();
 
-        foreach ($assignments->values() as $index => $assignment) {
+        foreach ($eligibleAssignments as $index => $assignment) {
             $upah = $assignment->upah()->first();
             if ($upah?->status_pembayaran === 'sudah_dibayar') {
                 continue;
@@ -40,7 +45,7 @@ class UpahTugasService
                     'mode_perhitungan' => 'manual',
                     'jumlah_upah' => ($shareCents + ($index < $remainderCents ? 1 : 0)) / 100,
                     'status_pembayaran' => 'belum_dibayar',
-                    'catatan' => 'Bagian dari total upah kegiatan, dibagi rata setelah semua tugas selesai.',
+                    'catatan' => 'Bagian upah dibagi rata kepada anggota yang laporannya disetujui.',
                 ],
             );
         }

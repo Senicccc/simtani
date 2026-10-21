@@ -7,7 +7,7 @@
   <div>
     <h2>Penugasan: {{ $jadwal->nama_kegiatan }}</h2>
     <p class="meta-row">
-      <span>{{ $jadwal->tanggal?->format('d-m-Y') }} – {{ $jadwal->tanggal_selesai?->format('d-m-Y') }}</span>
+      <span>{{ $jadwal->tanggal?->format('d/m/Y') }} – {{ $jadwal->tanggal_selesai?->format('d/m/Y') }}</span>
       <span>{{ $jadwal->jenisPekerjaan->nama_pekerjaan }}</span>
       <span>{{ $jadwal->lokasi }}</span>
     </p>
@@ -17,7 +17,7 @@
 </div>
 
 <h3 class="section-title">Periksa Kebutuhan Anggota Setiap Hari</h3>
-<p class="section-note">Jika anggota izin atau tidak hadir, tambahkan pengganti hanya bila jumlah anggota yang hadir belum memenuhi kebutuhan.</p>
+<p class="section-note">Jika anggota izin atau tidak hadir, tugaskan pengganti atau lanjutkan dengan anggota yang hadir selama masih ada minimal satu orang.</p>
 <div class="panel">
   <div class="table-scroll">
     <table>
@@ -27,22 +27,33 @@
       <tbody>
         @foreach ($dailyCoverage as $day)
           <tr>
-            <td class="cell-num">{{ $day['tanggal']->format('d-m-Y') }}</td>
+            <td class="cell-num">{{ $day['tanggal']->format('d/m/Y') }}</td>
             <td class="cell-num {{ $day['anggota'] < $day['kebutuhan'] ? 'text-warn' : '' }}">{{ $day['anggota'] }} / {{ $day['kebutuhan'] }}</td>
             <td>{{ $day['izin'] }} anggota</td>
             <td>
               @if ($day['izin'] > 0 && $day['anggota'] < $day['kebutuhan'])
+                @if ($day['diterima'])
+                  <p class="badge">Dilanjutkan dengan {{ $day['anggota'] }} anggota</p>
+                @elseif ($day['anggota'] > 0)
+                  <form method="post" action="{{ route('admin.jadwal.terima-kekurangan', $jadwal) }}" class="inline-form">
+                    @csrf
+                    <input type="hidden" name="tanggal" value="{{ $day['tanggal']->toDateString() }}">
+                    <button type="submit" class="btn-outline" onclick="return confirm('Lanjutkan kegiatan dengan {{ $day['anggota'] }} anggota yang tersedia?')">Lanjutkan dengan anggota yang ada</button>
+                  </form>
+                @else
+                  <span class="text-warn">Minimal satu anggota harus tersedia untuk melanjutkan.</span>
+                @endif
                 <form method="post" action="{{ route('admin.jadwal.pengganti-harian', $jadwal) }}" class="inline-form">
                   @csrf
                   <input type="hidden" name="tanggal" value="{{ $day['tanggal']->toDateString() }}">
-                  <label class="sr-only" for="pengganti-{{ $day['tanggal']->format('Ymd') }}">Pilih anggota pengganti untuk {{ $day['tanggal']->format('d-m-Y') }}</label>
+                  <label class="sr-only" for="pengganti-{{ $day['tanggal']->format('Ymd') }}">Pilih anggota pengganti untuk {{ $day['tanggal']->format('d/m/Y') }}</label>
                   <select id="pengganti-{{ $day['tanggal']->format('Ymd') }}" name="anggota_id" required>
-                    <option value="">Pilih nama anggota</option>
+                    <option value="">Pilih nama anggota pengganti</option>
                     @foreach ($activeMembers as $member)
                       <option value="{{ $member->id }}">{{ $member->nama_lengkap }}</option>
                     @endforeach
                   </select>
-                  <button type="submit" class="btn-primary">Tugaskan Pengganti</button>
+                  <button type="submit" class="btn-primary">Tugaskan pengganti</button>
                 </form>
               @elseif ($day['anggota'] < $day['kebutuhan'])
                 <span class="text-warn">Masih diperlukan {{ $day['kebutuhan'] - $day['anggota'] }} anggota untuk memenuhi kebutuhan harian.</span>
@@ -58,6 +69,7 @@
 </div>
 
 <h3 class="section-title">Anggota yang Ditugaskan</h3>
+<p class="section-note">Untuk menyetujui atau menolak laporan, buka detail anggota yang menunggu pemeriksaan. Edit penugasan hanya tersedia selama tugas masih aktif.</p>
 <div class="panel">
   <div class="table-scroll">
     <table>
@@ -75,9 +87,9 @@
         @forelse ($jadwal->penugasan->where('status', '!=', 'cancelled') as $item)
           <tr>
             <td><span class="cell-name">{{ $item->anggota->nama_lengkap }}</span></td>
-            <td class="cell-num">{{ $item->tanggalMulaiEfektif()->format('d-m-Y') }} – {{ $item->tanggalSelesaiEfektif()->format('d-m-Y') }}</td>
+            <td class="cell-num">{{ $item->tanggalMulaiEfektif()->format('d/m/Y') }} – {{ $item->tanggalSelesaiEfektif()->format('d/m/Y') }}</td>
             <td>@include('admin.partials.status-badge', ['type' => 'tugas', 'status' => $item->status])</td>
-            <td class="cell-wrap">{{ $item->presensiHarian->map(fn ($presence) => $presence->tanggal->format('d-m').' '.ucfirst(str_replace('_', ' ', $presence->status)))->implode(', ') ?: 'Belum dicatat' }}</td>
+            <td class="cell-wrap">{{ $item->presensiHarian->map(fn ($presence) => $presence->tanggal->format('d/m').' '.ucfirst(str_replace('_', ' ', $presence->status)))->implode(', ') ?: 'Belum dicatat' }}</td>
             <td>
               @if ($item->upah)
                 Rp {{ number_format((float) $item->upah->jumlah_upah, 0, ',', '.') }} | {{ str_replace('_', ' ', $item->upah->status_pembayaran) }}
@@ -90,7 +102,7 @@
             <td>
               <div class="row-actions">
                 <a href="{{ route('admin.penugasan.show', $item) }}" class="table-action">Detail</a>
-                @if (! in_array($item->status, ['completed', 'cancelled'], true))
+                @if (in_array($item->status, ['assigned', 'in_progress'], true))
                   <a href="{{ route('admin.penugasan.edit', $item) }}" class="table-action">Edit</a>
                 @endif
               </div>
@@ -105,9 +117,9 @@
 </div>
 
 @if ($availableSlots > 0)
-  <div class="panel panel-body">
+  <div id="tambah-anggota" class="panel panel-body">
     <h3>Tambah Anggota</h3>
-    <p class="note">Masih ada {{ $availableSlots }} posisi yang belum terisi.</p>
+    <p class="note">Cari anggota untuk mengisi {{ $availableSlots }} posisi yang tersisa.</p>
     <form method="post" action="{{ route('admin.penugasan.store') }}">
       @csrf
       <input type="hidden" name="jadwal_id" value="{{ $jadwal->id }}">

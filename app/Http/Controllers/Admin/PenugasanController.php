@@ -27,7 +27,7 @@ class PenugasanController extends Controller
                     ->orWhereHas('penugasan.anggota', fn ($member) => $member->where('nama_lengkap', 'like', '%'.$request->q.'%'));
             }))
             ->when($request->input('status') === 'active', fn ($query) => $query->whereHas('penugasan', fn ($assignment) => $assignment->whereIn('status', ['assigned', 'in_progress', 'waiting_verification'])))
-            ->when(in_array($request->input('status'), ['assigned', 'in_progress', 'waiting_verification', 'completed', 'cancelled'], true), fn ($query) => $query->whereHas('penugasan', fn ($assignment) => $assignment->where('status', $request->input('status'))))
+            ->when(in_array($request->input('status'), ['assigned', 'in_progress', 'waiting_verification', 'completed', 'rejected', 'cancelled'], true), fn ($query) => $query->whereHas('penugasan', fn ($assignment) => $assignment->where('status', $request->input('status'))))
             ->orderByDesc('tanggal')->get();
         $jadwal->each(function (Jadwal $schedule) use ($statuses): void {
             $schedule->setAttribute('anggota_terisi', $statuses->dailyCoverage($schedule)->min('anggota') ?? 0);
@@ -126,12 +126,12 @@ class PenugasanController extends Controller
             'status' => 'assigned',
             'sumber_penugasan' => 'hasil_perubahan',
             'assigned_at' => now(),
-            'catatan_perubahan' => 'Pengganti harian untuk '.$date->format('d-m-Y').'.',
+            'catatan_perubahan' => 'Pengganti harian untuk '.$date->format('d/m/Y').'.',
         ]);
         $statuses->refresh($jadwal);
 
         return redirect()->route('admin.jadwal.penugasan', $jadwal)
-            ->with('success', 'Pengganti untuk '.$date->format('d-m-Y').' berhasil ditambahkan.');
+            ->with('success', 'Pengganti untuk '.$date->format('d/m/Y').' berhasil ditambahkan.');
     }
 
     public function show(Penugasan $penugasan, ScheduleConflictService $conflicts): View
@@ -163,9 +163,20 @@ class PenugasanController extends Controller
     public function edit(Penugasan $penugasan): View
     {
         abort_unless(in_array($penugasan->status, ['assigned', 'in_progress'], true), 404);
-        $anggota = User::where('role', 'anggota')->where('status_aktif', true)->get();
+        $anggota = User::where('role', 'anggota')
+            ->where('status_aktif', true)
+            ->orderBy('nama_lengkap')
+            ->get();
+        $anggotaPengganti = User::where('role', 'anggota')
+            ->where('status_aktif', true)
+            ->whereKeyNot($penugasan->anggota_id)
+            ->whereDoesntHave('penugasan', fn ($query) => $query
+                ->where('jadwal_id', $penugasan->jadwal_id)
+                ->where('status', '!=', 'cancelled'))
+            ->orderBy('nama_lengkap')
+            ->get();
 
-        return view('admin.penugasan.edit', compact('penugasan', 'anggota'));
+        return view('admin.penugasan.edit', compact('penugasan', 'anggota', 'anggotaPengganti'));
     }
 
     public function remove(Request $request, Penugasan $penugasan, ScheduleConflictService $conflicts, JadwalStatusService $statuses): RedirectResponse
@@ -219,9 +230,11 @@ class PenugasanController extends Controller
                     true,
                 ))->count();
 
-            if ($coveredCount + ($replacement ? 1 : 0) < $penugasan->jadwal->jumlah_orang_dibutuhkan) {
+            $staffingAfterRemoval = $coveredCount + ($replacement ? 1 : 0);
+            $canProceedWithRemainingMember = ! $replacement && $staffingAfterRemoval >= 1;
+            if ($staffingAfterRemoval < $penugasan->jadwal->jumlah_orang_dibutuhkan && ! $canProceedWithRemainingMember) {
                 return back()->withErrors([
-                    'replacement_anggota_id' => 'Pilih anggota pengganti untuk memenuhi kebutuhan pada '.$date->format('d-m-Y').'.',
+                    'replacement_anggota_id' => 'Pilih anggota pengganti untuk memenuhi kebutuhan pada '.$date->format('d/m/Y').'.',
                 ]);
             }
         }
@@ -296,17 +309,54 @@ class PenugasanController extends Controller
         return redirect()->route('admin.penugasan.show', $penugasan)->with('success', 'Penugasan berhasil diperbarui.');
     }
 
-    public function verify(Penugasan $penugasan, UpahTugasService $upahService, JadwalStatusService $statuses): RedirectResponse
-    {
+    public function verify(
+        Request $request,
+        Penugasan $penugasan,
+        UpahTugasService $upahService,
+        JadwalStatusService $statuses,
+    ): RedirectResponse {
+        $validated = $request->validate([
+            'action' => ['nullable', 'in:approve,reject'],
+            'catatan_verifikasi' => ['required_if:action,reject', 'nullable', 'string', 'max:2000'],
+        ]);
+        $action = $validated['action'] ?? 'approve';
+
         if ($penugasan->status !== 'waiting_verification') {
             return back()->withErrors(['status' => 'Status tugas tidak menunggu verifikasi.']);
         }
 
         try {
-            DB::transaction(function () use ($penugasan, $upahService, $statuses): void {
+            DB::transaction(function () use ($penugasan, $upahService, $statuses, $action, $validated): void {
                 $penugasan = Penugasan::query()->lockForUpdate()->findOrFail($penugasan->id);
                 if ($penugasan->status !== 'waiting_verification') {
                     throw new RuntimeException('Tugas ini tidak lagi menunggu verifikasi.');
+                }
+
+                if ($action === 'reject') {
+                    $rejectedDate = $penugasan->completed_at?->toDateString();
+                    $presence = $penugasan->presensiHarian()
+                        ->whereDate('tanggal', $rejectedDate)
+                        ->lockForUpdate()
+                        ->first();
+
+                    if (! $presence) {
+                        throw new RuntimeException('Presensi laporan tidak ditemukan. Periksa data tugas sebelum menolak laporan.');
+                    }
+
+                    $presence->update([
+                        'status' => 'tidak_hadir',
+                        'catatan' => $validated['catatan_verifikasi'],
+                    ]);
+                    $penugasan->update([
+                        'status' => 'rejected',
+                        'verified_by' => auth()->id(),
+                        'verified_at' => now(),
+                        'catatan_verifikasi' => $validated['catatan_verifikasi'],
+                    ]);
+                    $upahService->distributeForCompletedSchedule($penugasan->jadwal);
+                    $statuses->refresh($penugasan->jadwal);
+
+                    return;
                 }
 
                 $penugasan->update([
@@ -323,6 +373,48 @@ class PenugasanController extends Controller
         }
 
         return redirect()->route('admin.penugasan.show', $penugasan)
-            ->with('success', 'Laporan disetujui. Status upah kegiatan ini sudah diperbarui.');
+            ->with('success', $action === 'reject'
+                ? 'Laporan ditolak, presensi ditandai tidak hadir, dan anggota tidak menerima upah.'
+                : 'Laporan disetujui. Status upah kegiatan ini sudah diperbarui.');
+    }
+
+    public function acceptDailyCoverage(
+        Request $request,
+        Jadwal $jadwal,
+        JadwalStatusService $statuses,
+    ): RedirectResponse {
+        $validated = $request->validate([
+            'tanggal' => ['required', 'date', 'after_or_equal:'.$jadwal->tanggal->toDateString(), 'before_or_equal:'.($jadwal->tanggal_selesai ?? $jadwal->tanggal)->toDateString()],
+        ]);
+        $date = Carbon::parse($validated['tanggal']);
+        $assignments = $jadwal->penugasan()
+            ->with('presensiHarian')
+            ->where('status', '!=', 'cancelled')
+            ->get()
+            ->filter(fn (Penugasan $assignment): bool => $assignment->tanggalMulaiEfektif()->lte($date)
+                && $assignment->tanggalSelesaiEfektif()->gte($date));
+        $presentCount = $assignments->filter(fn (Penugasan $assignment): bool => ! in_array(
+            $assignment->presensiHarian->first(fn ($presence): bool => $presence->tanggal->isSameDay($date))?->status,
+            ['izin', 'tidak_hadir'],
+            true,
+        ))->count();
+        $absentPresences = $assignments->map(fn (Penugasan $assignment) => $assignment->presensiHarian
+            ->first(fn ($presence): bool => $presence->tanggal->isSameDay($date)))
+            ->filter(fn ($presence): bool => $presence && in_array($presence->status, ['izin', 'tidak_hadir'], true));
+
+        if ($presentCount < 1 || $absentPresences->isEmpty()) {
+            return back()->withErrors(['tanggal' => 'Penugasan hanya dapat dilanjutkan jika minimal satu anggota hadir dan ada anggota yang tidak hadir.']);
+        }
+
+        DB::transaction(function () use ($absentPresences, $jadwal, $statuses): void {
+            foreach ($absentPresences as $presence) {
+                $presence->update(['coverage_accepted' => true]);
+            }
+
+            $statuses->refresh($jadwal);
+        });
+
+        return redirect()->route('admin.jadwal.penugasan', $jadwal)
+            ->with('success', 'Kegiatan dapat dilanjutkan dengan anggota yang hadir tanpa pengganti.');
     }
 }

@@ -59,6 +59,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/jadwal/{jadwal}/generate', [JadwalController::class, 'generate'])->name('jadwal.generate');
         Route::get('/jadwal/{jadwal}/penugasan', [JadwalController::class, 'penugasan'])->name('jadwal.penugasan');
         Route::post('/jadwal/{jadwal}/pengganti-harian', [PenugasanController::class, 'replaceForDate'])->name('jadwal.pengganti-harian');
+        Route::post('/jadwal/{jadwal}/terima-kekurangan', [PenugasanController::class, 'acceptDailyCoverage'])->name('jadwal.terima-kekurangan');
 
         Route::get('/penugasan', [PenugasanController::class, 'index'])->name('penugasan.index');
         Route::get('/penugasan/create', [PenugasanController::class, 'create'])->name('penugasan.create');

@@ -25,7 +25,7 @@
         <option value="">Pilih tugas</option>
         @foreach ($penugasan as $item)
           <option value="{{ $item->id }}" @selected(old('penugasan_id', request('penugasan_id')) == $item->id)>
-            {{ $item->jadwal->nama_kegiatan }} · {{ $item->jadwal->tanggal?->format('d-m-Y') }}
+            {{ $item->jadwal->nama_kegiatan }} · {{ $item->jadwal->tanggal?->format('d/m/Y') }}
           </option>
         @endforeach
       </select>
@@ -44,14 +44,14 @@
     <div class="field" id="target-label">
       <label for="target_jadwal_id">3. Jadwal tujuan</label>
       <select id="target_jadwal_id" name="target_jadwal_id" class="@error('target_jadwal_id') is-invalid @enderror">
-        <option value="">Tidak memilih jadwal pengganti</option>
+        <option value="">Tidak ada jadwal tersedia</option>
         @foreach ($availableTargets as $target)
           <option
             value="{{ $target['schedule']->id }}"
             data-assignment-id="{{ $target['assignment_id'] }}"
             @selected(old('target_jadwal_id') == $target['schedule']->id)
           >
-            {{ $target['schedule']->nama_kegiatan }} · {{ $target['schedule']->tanggal?->format('d-m-Y') }} · tersedia
+            {{ $target['schedule']->nama_kegiatan }} · {{ $target['schedule']->tanggal?->format('d/m/Y') }} · tersedia
           </option>
         @endforeach
       </select>
@@ -77,10 +77,13 @@
     const requestType = document.getElementById('jenis_permintaan');
     const sourceSelect = document.querySelector('[name="penugasan_id"]');
     const targetSelect = document.getElementById('target_jadwal_id');
+    const targetPlaceholder = targetSelect.options[0];
     const targetOptions = [...targetSelect.options].slice(1);
     const updateTargetChoices = () => {
       const isMove = requestType.value === 'tukar';
-      targetSelect.required = isMove;
+      const hasAvailableTargets = targetOptions.some((option) => option.dataset.assignmentId === sourceSelect.value);
+      targetPlaceholder.textContent = isMove ? 'Tidak ada jadwal tersedia' : 'Tidak memilih jadwal';
+      targetSelect.required = isMove && hasAvailableTargets;
       targetOptions.forEach((option) => {
         option.hidden = option.dataset.assignmentId !== sourceSelect.value;
         option.disabled = option.hidden;
@@ -88,6 +91,10 @@
       if (targetSelect.selectedOptions[0]?.disabled) {
         targetSelect.value = '';
       }
+      if (!isMove) {
+        targetSelect.value = '';
+      }
+      targetPlaceholder.selected = !targetSelect.value;
     };
     requestType.addEventListener('change', updateTargetChoices);
     sourceSelect.addEventListener('change', updateTargetChoices);

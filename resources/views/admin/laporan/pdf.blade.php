@@ -3,10 +3,13 @@
 <head>
   <meta charset="utf-8">
   <title>Laporan SIMTANI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
   <style>
     @page{size:A4 landscape;margin:14mm}
     *{box-sizing:border-box}
-    body{margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:1.45;color:#1f2b22;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    body{margin:0;font-family:'DM Sans',Arial,Helvetica,sans-serif;font-size:11px;line-height:1.5;color:#1f2b22;-webkit-print-color-adjust:exact;print-color-adjust:exact}
     .toolbar{margin-bottom:16px}
     .toolbar button{padding:8px 14px;border:0;border-radius:6px;background:#3f7d4f;color:#fff;font:inherit;font-size:12px;cursor:pointer}
     header{margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #1f4d2c}
@@ -53,7 +56,7 @@
     <tbody>
       @forelse ($rekapJadwal as $item)
         <tr>
-          <td>{{ $item->tanggal?->format('d-m-Y') }}</td>
+          <td>{{ $item->tanggal?->format('d/m/Y') }}</td>
           <td>{{ $item->nama_kegiatan }}</td>
           <td>{{ $item->jenisPekerjaan->nama_pekerjaan ?? '-' }}</td>
           <td>{{ $item->lokasi }}</td>
@@ -71,10 +74,10 @@
     <tbody>
       @forelse ($rekapTugas as $item)
         <tr>
-          <td>{{ $item->jadwal->tanggal?->format('d-m-Y') }}</td>
+          <td>{{ $item->jadwal->tanggal?->format('d/m/Y') }}</td>
           <td>{{ $item->jadwal->nama_kegiatan }}</td>
           <td>{{ $item->anggota->nama_lengkap }}</td>
-          <td>{{ ['assigned' => 'Ditugaskan', 'in_progress' => 'Sedang dikerjakan', 'waiting_verification' => 'Menunggu pemeriksaan', 'completed' => 'Selesai', 'cancelled' => 'Dibatalkan'][$item->status] ?? $item->status }}</td>
+          <td>{{ ['assigned' => 'Ditugaskan', 'in_progress' => 'Sedang dikerjakan', 'waiting_verification' => 'Menunggu pemeriksaan', 'completed' => 'Selesai', 'rejected' => 'Laporan ditolak', 'cancelled' => 'Dibatalkan'][$item->status] ?? $item->status }}</td>
           <td>{{ ['hadir' => 'Hadir', 'izin' => 'Izin', 'tidak_hadir' => 'Tidak hadir'][$item->presensi?->status] ?? 'Belum dicatat' }}</td>
           <td class="num">{{ $item->upah ? 'Rp '.number_format((float) $item->upah->jumlah_upah, 0, ',', '.') : 'Belum dihitung' }}</td>
         </tr>
@@ -92,8 +95,8 @@
         <tr>
           <td>{{ $item->penugasan->jadwal->nama_kegiatan }}</td>
           <td>{{ $item->penugasan->anggota->nama_lengkap }}</td>
-          <td>{{ $item->waktu_check_in?->format('d-m-Y H:i') ?? '-' }}</td>
-          <td>{{ $item->waktu_check_out?->format('d-m-Y H:i') ?? '-' }}</td>
+          <td>{{ $item->waktu_check_in?->format('d/m/Y H:i') ?? '-' }}</td>
+          <td>{{ $item->waktu_check_out?->format('d/m/Y H:i') ?? '-' }}</td>
           <td>{{ ['hadir' => 'Hadir', 'izin' => 'Izin', 'tidak_hadir' => 'Tidak hadir'][$item->status] ?? $item->status }}</td>
           <td>{{ $item->catatan ?: '-' }}</td>
         </tr>
@@ -114,7 +117,7 @@
           <td class="num">Rp {{ number_format((float) $item->jumlah_upah, 0, ',', '.') }}</td>
           <td>{{ $item->status_pembayaran === 'sudah_dibayar' ? 'Sudah dibayar' : 'Belum dibayar' }}</td>
           <td>{{ $item->metode_pembayaran ?? '-' }}</td>
-          <td>{{ $item->waktu_pembayaran?->format('d-m-Y H:i') ?? '-' }}</td>
+          <td>{{ $item->waktu_pembayaran?->format('d/m/Y H:i') ?? '-' }}</td>
         </tr>
       @empty
         <tr><td colspan="6" class="empty">Tidak ada data pada hasil filter.</td></tr>
@@ -122,6 +125,6 @@
     </tbody>
   </table>
 
-  <p class="foot">Dicetak {{ now()->format('d-m-Y H:i') }}</p>
+  <p class="foot">Dicetak {{ now()->format('d/m/Y H:i') }}</p>
 </body>
 </html>

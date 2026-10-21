@@ -25,19 +25,19 @@
       <dt>Tugas pengaju</dt>
       <dd>
         <a href="{{ route('admin.penugasan.show', $permintaan->penugasan) }}">{{ $permintaan->penugasan->jadwal->nama_kegiatan }}</a>
-        <small>{{ $permintaan->penugasan->jadwal->tanggal?->format('d-m-Y') }}</small>
+        <small>{{ $permintaan->penugasan->jadwal->tanggal?->format('d/m/Y') }}</small>
       </dd>
     </div>
 
     @if ($permintaan->targetJadwal)
       <div>
         <dt>Jadwal tujuan yang diminta</dt>
-        <dd>{{ $permintaan->targetJadwal->nama_kegiatan }}<small>{{ $permintaan->targetJadwal->tanggal?->format('d-m-Y') }}</small></dd>
+        <dd>{{ $permintaan->targetJadwal->nama_kegiatan }}<small>{{ $permintaan->targetJadwal->tanggal?->format('d/m/Y') }}</small></dd>
       </div>
     @elseif ($permintaan->targetPenugasan)
       <div>
         <dt>Jadwal tujuan riwayat lama</dt>
-        <dd>{{ $permintaan->targetPenugasan->jadwal->nama_kegiatan }}<small>{{ $permintaan->targetPenugasan->jadwal->tanggal?->format('d-m-Y') }}</small></dd>
+        <dd>{{ $permintaan->targetPenugasan->jadwal->nama_kegiatan }}<small>{{ $permintaan->targetPenugasan->jadwal->tanggal?->format('d/m/Y') }}</small></dd>
       </div>
     @else
       <div>
@@ -54,7 +54,7 @@
     @if ($permintaan->diprosesOleh)
       <div>
         <dt>Diproses oleh</dt>
-        <dd>{{ $permintaan->diprosesOleh->nama_lengkap }}<small>{{ $permintaan->diproses_at?->format('d-m-Y H:i') }}</small></dd>
+        <dd>{{ $permintaan->diprosesOleh->nama_lengkap }}<small>{{ $permintaan->diproses_at?->format('d/m/Y H:i') }}</small></dd>
       </div>
     @endif
 
@@ -79,7 +79,7 @@
           <option value="">Tidak ada pengganti, batalkan tugas</option>
           @foreach ($availableTargets as $target)
             <option value="{{ $target->id }}" @selected(old('target_jadwal_id', $permintaan->target_jadwal_id) == $target->id)>
-              {{ $target->nama_kegiatan }} · {{ $target->tanggal?->format('d-m-Y') }} · tersedia
+              {{ $target->nama_kegiatan }} · {{ $target->tanggal?->format('d/m/Y') }} · tersedia
             </option>
           @endforeach
         </select>

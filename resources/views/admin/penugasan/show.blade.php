@@ -10,10 +10,9 @@
     <p>@include('admin.partials.status-badge', ['type' => 'tugas', 'status' => $penugasan->status])</p>
   </div>
   <div class="page-actions">
-    <a href="{{ route('admin.jadwal.edit', $jadwal) }}" class="btn-outline">Ubah Detail Tugas</a>
     <a href="{{ route('admin.jadwal.show', $jadwal) }}" class="btn-outline">Kembali ke Detail Jadwal</a>
     @if ($penugasan->status === 'completed')
-      <a href="{{ route('admin.upah.index', ['jadwal_id' => $penugasan->jadwal_id]) }}" class="btn-primary">Lihat Upah Kegiatan Ini</a>
+      <a href="{{ route('admin.upah.index', ['jadwal_id' => $penugasan->jadwal_id]) }}" class="btn-primary">Lihat upah kegiatan ini</a>
     @endif
   </div>
 </div>
@@ -21,7 +20,7 @@
 <div class="panel panel-body">
   <dl class="detail-grid">
     <div><dt>Jenis pekerjaan</dt><dd>{{ $jadwal->jenisPekerjaan->nama_pekerjaan }}</dd></div>
-    <div><dt>Tanggal kegiatan</dt><dd>{{ $penugasan->tanggalMulaiEfektif()->format('d-m-Y') }} – {{ $penugasan->tanggalSelesaiEfektif()->format('d-m-Y') }}</dd></div>
+    <div><dt>Tanggal kegiatan</dt><dd>{{ $penugasan->tanggalMulaiEfektif()->format('d/m/Y') }} – {{ $penugasan->tanggalSelesaiEfektif()->format('d/m/Y') }}</dd></div>
     <div><dt>Waktu</dt><dd>{{ $jadwal->waktu_mulai }} - {{ $jadwal->waktu_selesai }}</dd></div>
     <div><dt>Lokasi</dt><dd>{{ $jadwal->lokasi }}</dd></div>
     <div>
@@ -56,7 +55,7 @@
     <dl class="detail-grid">
       <div>
         <dt>Kehadiran</dt>
-        <dd>{{ $item->presensiHarian->map(fn ($presence) => $presence->tanggal->format('d-m').' '.ucfirst(str_replace('_', ' ', $presence->status)))->implode(', ') ?: 'Belum dicatat' }}</dd>
+        <dd>{{ $item->presensiHarian->map(fn ($presence) => $presence->tanggal->format('d/m').' '.ucfirst(str_replace('_', ' ', $presence->status)))->implode(', ') ?: 'Belum dicatat' }}</dd>
       </div>
       <div>
         <dt>Upah</dt>
@@ -82,6 +81,12 @@
           @endif
         </dd>
       </div>
+      @if ($item->catatan_verifikasi)
+        <div class="span-all">
+          <dt>{{ $item->status === 'rejected' ? 'Alasan penolakan laporan' : ($item->verified_by ? 'Catatan pemeriksaan admin' : 'Keterangan penyelesaian') }}</dt>
+          <dd>{{ $item->catatan_verifikasi }}</dd>
+        </div>
+      @endif
     </dl>
 
     @if ($bisaDiubah || $item->status === 'waiting_verification')
@@ -94,22 +99,13 @@
           <form method="post" action="{{ route('admin.penugasan.verify', $item) }}"
                 onsubmit="return confirm('Setujui laporan? Upah dibagi setelah semua anggota selesai.')">
             @csrf
-            <button type="submit" class="btn-primary">Setujui Laporan</button>
+            <button name="action" value="approve" type="submit" class="btn-primary">Setujui Laporan</button>
           </form>
-        @endif
-
-        @if ($bisaDiubah)
-          <form method="post" action="{{ route('admin.penugasan.remove', $item) }}" class="inline-form"
-                onsubmit="return confirm('Keluarkan anggota ini dari tugas?')">
+          <form method="post" action="{{ route('admin.penugasan.verify', $item) }}" class="verification-rejection">
             @csrf
-            <label class="inline-label" for="ganti-{{ $item->id }}">Ganti dengan</label>
-            <select id="ganti-{{ $item->id }}" name="replacement_anggota_id">
-              <option value="">Tanpa pengganti (jika kuota tetap terpenuhi)</option>
-              @foreach ($anggotaPengganti as $candidate)
-                <option value="{{ $candidate->id }}">{{ $candidate->nama_lengkap }}</option>
-              @endforeach
-            </select>
-            <button type="submit" class="btn-danger">Keluarkan Anggota</button>
+            <label class="inline-label" for="reject-note-{{ $item->id }}">Alasan penolakan laporan</label>
+            <textarea id="reject-note-{{ $item->id }}" name="catatan_verifikasi" required maxlength="2000" placeholder="Jelaskan alasan laporan ditolak"></textarea>
+            <button name="action" value="reject" type="submit" class="btn-danger" onclick="return confirm('Tolak laporan dan tandai anggota tidak hadir tanpa upah?')">Tolak Laporan · Tidak Hadir</button>
           </form>
         @endif
       </div>

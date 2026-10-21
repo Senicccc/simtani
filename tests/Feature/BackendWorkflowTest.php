@@ -10,6 +10,7 @@ use App\Models\PermintaanPerubahan;
 use App\Models\Presensi;
 use App\Models\Upah;
 use App\Models\User;
+use App\Services\JadwalStatusService;
 use App\Services\ScheduleConflictService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -489,6 +490,185 @@ class BackendWorkflowTest extends TestCase
         $this->assertSame('completed', $schedule->fresh()->status);
     }
 
+    public function test_member_cannot_request_a_change_after_checking_in(): void
+    {
+        $admin = $this->admin();
+        $member = $this->member();
+        $assignment = $this->assignment($this->schedule($admin, $this->job($admin)), $member);
+        $this->actingAs($member)->post(route('anggota.tugas.mulai', $assignment));
+
+        $this->post(route('anggota.permintaan-perubahan.store'), [
+            'penugasan_id' => $assignment->id,
+            'jenis_permintaan' => 'sanggah',
+            'alasan' => 'Tidak bisa melanjutkan.',
+        ])->assertSessionHasErrors('penugasan_id');
+
+        $this->assertDatabaseCount('permintaan_perubahan', 0);
+    }
+
+    public function test_member_cannot_select_or_submit_an_assignment_with_a_pending_change_request(): void
+    {
+        $admin = $this->admin();
+        $member = $this->member();
+        $pendingAssignment = $this->assignment($this->schedule($admin, $this->job($admin)), $member);
+        $availableAssignment = $this->assignment($this->schedule($admin, $this->job($admin)), $member);
+        PermintaanPerubahan::create([
+            'penugasan_id' => $pendingAssignment->id,
+            'diajukan_oleh' => $member->id,
+            'jenis_permintaan' => 'sanggah',
+            'alasan' => 'Tidak dapat mengerjakan tugas.',
+            'status' => 'pending',
+        ]);
+        $this->actingAs($member)
+            ->get(route('anggota.permintaan-perubahan.create'))
+            ->assertOk()
+            ->assertDontSee('value="'.$pendingAssignment->id.'"', false)
+            ->assertSee('value="'.$availableAssignment->id.'"', false);
+
+        $this->post(route('anggota.permintaan-perubahan.store'), [
+            'penugasan_id' => $pendingAssignment->id,
+            'jenis_permintaan' => 'sanggah',
+            'alasan' => 'Mengajukan lagi sebelum keputusan.',
+        ])->assertSessionHasErrors('penugasan_id');
+
+        $this->assertDatabaseCount('permintaan_perubahan', 1);
+    }
+
+    public function test_admin_can_reject_a_false_completion_report_without_awarding_wages(): void
+    {
+        $admin = $this->admin();
+        $member = $this->member();
+        $schedule = $this->schedule($admin, $this->job($admin));
+        $assignment = $this->assignment($schedule, $member, 'waiting_verification');
+        $assignment->update(['completed_at' => now()]);
+        Presensi::create([
+            'penugasan_id' => $assignment->id,
+            'tanggal' => today()->toDateString(),
+            'status' => 'hadir',
+            'waktu_check_in' => now(),
+            'waktu_check_out' => now(),
+        ]);
+        $this->actingAs($admin);
+
+        $this->post(route('admin.penugasan.verify', $assignment), [
+            'action' => 'reject',
+            'catatan_verifikasi' => 'Bukti laporan tidak sesuai.',
+        ])->assertRedirect(route('admin.penugasan.show', $assignment));
+
+        $this->assertDatabaseHas('penugasan', [
+            'id' => $assignment->id,
+            'status' => 'rejected',
+            'verified_by' => $admin->id,
+            'catatan_verifikasi' => 'Bukti laporan tidak sesuai.',
+        ]);
+        $this->assertDatabaseHas('presensi', [
+            'penugasan_id' => $assignment->id,
+            'status' => 'tidak_hadir',
+            'catatan' => 'Bukti laporan tidak sesuai.',
+        ]);
+        $this->assertDatabaseMissing('upah', ['penugasan_id' => $assignment->id]);
+    }
+
+    public function test_rejected_report_closes_expired_schedule_and_admin_can_extend_deadline(): void
+    {
+        $admin = $this->admin();
+        $member = $this->member();
+        $schedule = $this->schedule($admin, $this->job($admin));
+        $schedule->update([
+            'tanggal' => today()->subDays(2)->toDateString(),
+            'tanggal_selesai' => today()->subDay()->toDateString(),
+        ]);
+        $assignment = $this->assignment($schedule, $member, 'waiting_verification');
+        $assignment->update(['completed_at' => today()->subDay()]);
+        Presensi::create([
+            'penugasan_id' => $assignment->id,
+            'tanggal' => today()->subDay()->toDateString(),
+            'status' => 'hadir',
+            'waktu_check_in' => today()->subDay()->setTime(8, 0),
+            'waktu_check_out' => today()->subDay()->setTime(12, 0),
+        ]);
+        $this->actingAs($admin)->post(route('admin.penugasan.verify', $assignment), [
+            'action' => 'reject',
+            'catatan_verifikasi' => 'Laporan perlu diperbaiki.',
+        ])->assertRedirect(route('admin.penugasan.show', $assignment));
+
+        $this->assertDatabaseHas('jadwal', ['id' => $schedule->id, 'status' => 'completed']);
+        $this->get(route('admin.jadwal.show', $schedule))
+            ->assertOk()
+            ->assertSee('Jadwal ditutup karena tenggat berakhir')
+            ->assertSee('Perpanjang atau ubah tanggal kegiatan');
+
+        $this->put(route('admin.jadwal.update', $schedule), [
+            'jenis_pekerjaan_id' => $schedule->jenis_pekerjaan_id,
+            'nama_kegiatan' => $schedule->nama_kegiatan,
+            'deskripsi' => $schedule->deskripsi,
+            'lokasi' => $schedule->lokasi,
+            'tanggal' => today()->addDay()->toDateString(),
+            'tanggal_selesai' => today()->addDays(3)->toDateString(),
+            'waktu_mulai' => '08:00',
+            'waktu_selesai' => '12:00',
+            'jumlah_orang_dibutuhkan' => 1,
+            'jumlah_satuan' => 1,
+            'total_upah' => $schedule->total_upah,
+            'perlu_verifikasi' => 1,
+        ])->assertRedirect(route('admin.jadwal.show', $schedule));
+
+        $this->assertDatabaseHas('jadwal', [
+            'id' => $schedule->id,
+            'status' => 'scheduled',
+        ]);
+        $this->assertSame(
+            today()->addDays(3)->toDateString(),
+            $schedule->refresh()->tanggal_selesai->toDateString(),
+        );
+        $this->assertDatabaseHas('penugasan', [
+            'id' => $assignment->id,
+            'status' => 'cancelled',
+            'catatan_verifikasi' => 'Laporan perlu diperbaiki.',
+        ]);
+        $this->get(route('admin.jadwal.penugasan', $schedule))
+            ->assertOk()
+            ->assertSee('Tambah Anggota');
+    }
+
+    public function test_rejected_report_is_excluded_from_the_shared_wage(): void
+    {
+        $admin = $this->admin();
+        $schedule = $this->schedule($admin, $this->job($admin));
+        $schedule->update(['jumlah_orang_dibutuhkan' => 2]);
+        $rejectedAssignment = $this->assignment($schedule, $this->member(), 'waiting_verification');
+        $approvedAssignment = $this->assignment($schedule, $this->member(), 'waiting_verification');
+
+        foreach ([$rejectedAssignment, $approvedAssignment] as $assignment) {
+            $assignment->update(['completed_at' => now()]);
+            Presensi::create([
+                'penugasan_id' => $assignment->id,
+                'tanggal' => today()->toDateString(),
+                'status' => 'hadir',
+                'waktu_check_in' => now(),
+                'waktu_check_out' => now(),
+            ]);
+        }
+        $this->actingAs($admin);
+
+        $this->post(route('admin.penugasan.verify', $rejectedAssignment), [
+            'action' => 'reject',
+            'catatan_verifikasi' => 'Bukti tidak valid.',
+        ])->assertRedirect(route('admin.penugasan.show', $rejectedAssignment));
+        $this->assertDatabaseCount('upah', 0);
+
+        $this->post(route('admin.penugasan.verify', $approvedAssignment), [
+            'action' => 'approve',
+        ])->assertRedirect(route('admin.penugasan.show', $approvedAssignment));
+
+        $this->assertDatabaseMissing('upah', ['penugasan_id' => $rejectedAssignment->id]);
+        $this->assertDatabaseHas('upah', [
+            'penugasan_id' => $approvedAssignment->id,
+            'jumlah_upah' => 150000,
+            'status_pembayaran' => 'belum_dibayar',
+        ]);
+    }
+
     public function test_leave_is_daily_and_admin_can_assign_a_replacement_for_that_day(): void
     {
         $admin = $this->admin();
@@ -516,7 +696,7 @@ class BackendWorkflowTest extends TestCase
         $this->actingAs($admin)->get(route('admin.jadwal.penugasan', $schedule))
             ->assertOk()
             ->assertSee('0 / 1')
-            ->assertSee('Tugaskan pengganti hari ini');
+            ->assertSee('Tugaskan pengganti');
 
         $this->post(route('admin.penugasan.remove', $assignment))
             ->assertSessionHasErrors('replacement_anggota_id');
@@ -533,6 +713,57 @@ class BackendWorkflowTest extends TestCase
             'tanggal_selesai' => $leaveDate->toDateString().' 00:00:00',
         ]);
         $this->assertDatabaseHas('jadwal', ['id' => $schedule->id, 'status' => 'ongoing']);
+    }
+
+    public function test_admin_can_accept_reduced_daily_coverage_when_one_member_is_present(): void
+    {
+        $admin = $this->admin();
+        $schedule = $this->schedule($admin, $this->job($admin));
+        $schedule->update(['jumlah_orang_dibutuhkan' => 2]);
+        $absentAssignment = $this->assignment($schedule, $this->member());
+        $presentAssignment = $this->assignment($schedule, $this->member());
+        Presensi::create([
+            'penugasan_id' => $absentAssignment->id,
+            'tanggal' => today()->toDateString(),
+            'status' => 'tidak_hadir',
+        ]);
+        Presensi::create([
+            'penugasan_id' => $presentAssignment->id,
+            'tanggal' => today()->toDateString(),
+            'status' => 'hadir',
+            'waktu_check_in' => now(),
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.jadwal.terima-kekurangan', $schedule), ['tanggal' => today()->toDateString()])
+            ->assertRedirect(route('admin.jadwal.penugasan', $schedule));
+
+        $this->assertDatabaseHas('presensi', [
+            'penugasan_id' => $absentAssignment->id,
+            'coverage_accepted' => true,
+        ]);
+        $this->assertSame(0, app(JadwalStatusService::class)->pendingReplacementSlots($schedule));
+        $this->get(route('admin.jadwal.penugasan', $schedule))
+            ->assertOk()
+            ->assertSee('Dilanjutkan dengan 1 anggota');
+    }
+
+    public function test_admin_can_remove_a_member_if_at_least_one_other_member_remains(): void
+    {
+        $admin = $this->admin();
+        $schedule = $this->schedule($admin, $this->job($admin));
+        $schedule->update(['jumlah_orang_dibutuhkan' => 2]);
+        $assignmentToRemove = $this->assignment($schedule, $this->member());
+        $this->assignment($schedule, $this->member());
+
+        $this->actingAs($admin)
+            ->post(route('admin.penugasan.remove', $assignmentToRemove))
+            ->assertRedirect(route('admin.penugasan.show', $assignmentToRemove));
+
+        $this->assertDatabaseHas('penugasan', [
+            'id' => $assignmentToRemove->id,
+            'status' => 'cancelled',
+        ]);
     }
 
     public function test_leave_without_a_full_replacement_cannot_complete_the_schedule(): void
@@ -676,7 +907,8 @@ class BackendWorkflowTest extends TestCase
         $this->get(route('anggota.tugas.show', $assignment))
             ->assertOk()
             ->assertSee('Hadir')
-            ->assertSee('Catat check-out hari ini')
+            ->assertSee('Laporkan tugas &amp; check-out', false)
+            ->assertSee('Check-out saja')
             ->assertSee('Apakah Anda yakin ingin check-out dari tugas ini sekarang?', false);
 
         $this->post(route('anggota.tugas.check-out', $assignment))
@@ -685,7 +917,7 @@ class BackendWorkflowTest extends TestCase
         $this->assertNotNull($assignment->fresh()->presensi->waktu_check_out);
         $this->get(route('anggota.tugas.show', $assignment))
             ->assertOk()
-            ->assertDontSee('Catat check-out hari ini');
+            ->assertDontSee('Check-out saja');
 
         $this->post(route('anggota.tugas.complete', $assignment), [
             'tanggal_selesai' => today()->toDateString(),

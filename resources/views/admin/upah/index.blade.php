@@ -6,7 +6,7 @@
   <div>
     <h2>Upah</h2>
     @if ($selectedSchedule)
-      <p>Kegiatan: {{ $selectedSchedule->nama_kegiatan }}</p>
+      <p>Upah kegiatan: {{ $selectedSchedule->nama_kegiatan }}</p>
     @endif
   </div>
   @if ($selectedSchedule)
@@ -19,7 +19,7 @@
 @endif
 
 @if (! request()->filled('status_pembayaran'))
-  <h3 class="section-title">{{ $selectedSchedule ? 'Laporan Kegiatan yang Perlu Diperiksa' : 'Laporan yang Perlu Diperiksa' }}</h3>
+  <h3 class="section-title">{{ $selectedSchedule ? 'Laporan kegiatan yang perlu diperiksa' : 'Laporan yang perlu diperiksa' }}</h3>
   <p class="section-note">Tugas yang menunggu persetujuan admin. Setelah disetujui, upah masuk ke daftar pembayaran.</p>
   <div class="panel">
     <div class="table-scroll">
@@ -38,7 +38,7 @@
             <tr>
               <td><span class="cell-name">{{ $penugasan->anggota->nama_lengkap }}</span></td>
               <td>{{ $penugasan->jadwal->nama_kegiatan }}</td>
-              <td class="cell-num">{{ $penugasan->completed_at?->format('d-m-Y') ?? '-' }}</td>
+              <td class="cell-num">{{ $penugasan->completed_at?->format('d/m/Y') ?? '-' }}</td>
               <td>
                 Rp {{ number_format((float) $penugasan->jadwal->total_upah, 0, ',', '.') }}
                 <span class="cell-sub">total kegiatan, dibagi rata</span>
@@ -98,7 +98,7 @@
             <td>
               @if ($item->metode_pembayaran || $item->waktu_pembayaran)
                 <span class="cell-name">{{ $item->metode_pembayaran ?? '-' }}</span>
-                <span class="cell-sub">{{ $item->waktu_pembayaran?->format('d-m-Y H:i') ?? '-' }}</span>
+                <span class="cell-sub">{{ $item->waktu_pembayaran?->format('d/m/Y H:i') ?? '-' }}</span>
               @else
                 -
               @endif

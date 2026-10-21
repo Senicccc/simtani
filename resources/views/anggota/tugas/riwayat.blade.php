@@ -17,7 +17,7 @@
       <thead>
         <tr>
           <th>Kegiatan</th>
-          <th>Selesai Pada</th>
+          <th>Selesai pada</th>
           <th>Upah</th>
           <th>Status Pembayaran</th>
           <th class="col-end">Detail</th>
@@ -27,7 +27,7 @@
         @forelse($penugasan as $item)
           <tr>
             <td><span class="cell-name">{{ $item->jadwal->nama_kegiatan }}</span></td>
-            <td class="cell-num">{{ $item->completed_at?->format('d-m-Y H:i') ?? '-' }}</td>
+            <td class="cell-num">{{ $item->completed_at?->format('d/m/Y H:i') ?? '-' }}</td>
             <td class="cell-num">{{ $item->upah ? 'Rp '.number_format((float) $item->upah->jumlah_upah, 0, ',', '.') : 'Belum tercatat' }}</td>
             <td>
               @if($item->upah)
