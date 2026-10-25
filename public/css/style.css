@@ -492,3 +492,22 @@ button.table-action{background:none;border:0;font:inherit;font-size:12px;cursor:
 }
 .task-card__action{padding:14px 20px;border-top:1px solid var(--line-soft);background:#f7faf7;border-radius:0 0 var(--radius) var(--radius)}
 .page-actions--bottom{margin-top:20px}
+/* ---------- PERBAIKAN MOBILE (layout + tabel) ---------- */
+@media (max-width:768px){
+  /* Bar atas jadi baris sendiri di atas konten, bukan kolom di kiri */
+  #app-shell{flex-direction:column}
+  .mobile-topbar{width:100%}
+  main{padding:18px 16px}
+
+  /* Drawer memenuhi tinggi layar yang benar-benar terlihat (tombol Keluar tidak tertutup bar browser iOS) */
+  .sidebar{height:auto}
+
+  /* Tabel lebih rapat agar muat lebih banyak kolom sebelum perlu digeser */
+  .table-scroll{-webkit-overflow-scrolling:touch}
+  th,td{padding:9px 10px}
+  .panel th,.panel td{padding:10px 12px}
+
+  /* Judul halaman */
+  .view h2,.page-head h2{font-size:20px}
+  .page-head{margin-bottom:14px}
+}
