@@ -511,3 +511,118 @@ button.table-action{background:none;border:0;font:inherit;font-size:12px;cursor:
   .view h2,.page-head h2{font-size:20px}
   .page-head{margin-bottom:14px}
 }
+
+/* Halaman login: kartu kaca di atas foto latar. Hanya dimuat oleh auth/login.blade.php */
+.auth-body{margin:0;background:#1f4d2c}
+
+.auth-page{
+  position:relative;
+  min-height:100vh;min-height:100dvh;
+  display:grid;place-items:center;
+  padding:24px;
+  overflow:hidden;
+  isolation:isolate;
+}
+/* Foto latar: sengaja di-blur karena Background.jpg beresolusi kecil */
+.auth-page::before{
+  content:"";position:absolute;inset:-24px;z-index:-2;
+  background:url('../images/Background.jpg') center/cover no-repeat;
+  filter:blur(6px) saturate(1.1);
+}
+/* Lapisan hijau gelap supaya teks putih selalu terbaca */
+.auth-page::after{
+  content:"";position:absolute;inset:0;z-index:-1;
+  background:linear-gradient(160deg,rgba(18,52,30,.72),rgba(31,77,44,.8));
+}
+
+.auth-card{
+  width:min(100%,400px);
+  padding:34px 30px 30px;
+  color:#fff;
+  border:1px solid rgba(255,255,255,.28);
+  border-radius:28px;
+  background:rgba(255,255,255,.12);
+  -webkit-backdrop-filter:blur(18px) saturate(1.2);
+  backdrop-filter:blur(18px) saturate(1.2);
+  box-shadow:0 24px 60px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.25);
+}
+/* Browser tanpa dukungan blur: pakai latar pekat supaya tetap terbaca */
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .auth-card{background:rgba(24,62,36,.9)}
+}
+
+.auth-brand{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:10px}
+.auth-logo{
+  width:84px;height:58px;flex:none;
+  object-fit:cover;            /* memotong ruang putih di sekitar wordmark */
+  border-radius:14px;background:#fff;
+  box-shadow:0 4px 14px rgba(0,0,0,.2);
+}
+.auth-brand h1{
+  margin:0;
+  font-family:'Manrope','DM Sans',sans-serif;
+  font-size:clamp(26px,6vw,32px);font-weight:800;letter-spacing:.04em;line-height:1;
+}
+.auth-sub{
+  margin:0 0 24px;text-align:center;
+  font-size:13px;line-height:1.55;color:rgba(255,255,255,.84);
+}
+
+.auth-error{
+  margin:0 0 16px;padding:11px 14px;
+  border:1px solid #f1b9ae;border-radius:14px;
+  font-size:13px;line-height:1.45;color:#7a1810;background:rgba(255,236,232,.96);
+}
+
+.auth-field{position:relative;margin-bottom:14px}
+.auth-field input{
+  box-sizing:border-box;width:100%;height:50px;padding:0 50px 0 22px;
+  color:#fff;font:inherit;font-size:15px;
+  background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.5);border-radius:999px;
+  transition:border-color .15s,background .15s,box-shadow .15s;
+}
+.auth-field input::placeholder{color:rgba(255,255,255,.78)}
+.auth-field input:focus{
+  outline:none;background:rgba(255,255,255,.2);border-color:#fff;
+  box-shadow:0 0 0 4px rgba(255,255,255,.2);
+}
+/* Isi otomatis browser: jaga agar teks tetap putih dan terbaca */
+.auth-field input:-webkit-autofill{
+  -webkit-text-fill-color:#fff;caret-color:#fff;
+  box-shadow:0 0 0 100px rgba(31,77,44,.92) inset;
+  transition:background-color 9999s ease-out 0s;
+}
+.auth-field svg{
+  position:absolute;right:20px;top:50%;
+  width:18px;height:18px;margin-top:-9px;
+  color:#fff;pointer-events:none;
+}
+
+.auth-check{
+  display:flex;align-items:center;gap:10px;
+  margin:4px 0 20px;font-size:14px;color:rgba(255,255,255,.92);cursor:pointer;
+}
+.auth-check input{width:18px;height:18px;margin:0;accent-color:#fff}
+
+.auth-submit{
+  width:100%;height:50px;border:0;border-radius:999px;cursor:pointer;
+  font:inherit;font-size:15px;font-weight:700;color:#1f4d2c;background:#fff;
+  transition:transform .1s,box-shadow .15s,background .15s;
+}
+.auth-submit:hover{background:#eef6f0;box-shadow:0 8px 22px rgba(0,0,0,.2)}
+.auth-submit:active{transform:scale(.98)}
+
+/* Label disembunyikan secara visual tapi tetap dibaca pembaca layar */
+.auth-sr{
+  position:absolute;width:1px;height:1px;margin:-1px;padding:0;
+  overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;
+}
+
+@media (max-width:420px){
+  .auth-card{padding:28px 20px 24px;border-radius:24px}
+  .auth-logo{width:72px;height:50px}
+}
+@media (prefers-reduced-motion:reduce){
+  .auth-field input,.auth-submit{transition:none}
+}
