@@ -13,15 +13,16 @@
 
 <div id="app-shell">
   <div class="mobile-topbar">
-    <button class="icon-btn" id="btn-menu" aria-label="Buka menu">
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+    <button class="icon-btn" id="btn-menu" aria-label="Buka menu" aria-controls="sidebar" aria-expanded="false">
+      <svg class="menu-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      <svg class="close-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 6 12 12M18 6 6 18"/></svg>
     </button>
     <div class="mobile-topbar-brand"><img src="{{ asset('images/Logo.png') }}" alt="" class="brand-logo">SIMTANI</div>
   </div>
 
-  <div id="sidebar-backdrop"></div>
+  <div id="sidebar-backdrop" aria-hidden="true"></div>
 
-  <aside class="sidebar" id="sidebar">
+  <aside class="sidebar" id="sidebar" aria-label="Navigasi utama">
     <div class="brand"><img src="{{ asset('images/Logo.png') }}" alt="Logo SIMTANI" class="brand-logo">SIMTANI</div>
 
     @auth

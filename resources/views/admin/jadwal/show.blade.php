@@ -68,6 +68,11 @@
             <span>
               <span class="candidate-name">{{ $candidate['nama_lengkap'] }}</span>
               <span class="candidate-reason">{{ $candidate['reason'] }}</span>
+              @if (isset($candidate['skor'], $candidate['rincian']))
+                <span class="candidate-score">
+                  Peringkat {{ $candidate['peringkat'] }} · beban {{ number_format($candidate['rincian']['beban_jam'], 2, ',', '.') }} jam · jeda {{ $candidate['rincian']['jeda_hari'] }} hari · hadir {{ number_format($candidate['rincian']['kehadiran'] * 100, 0, ',', '.') }}%
+                </span>
+              @endif
             </span>
           </label>
         @endforeach

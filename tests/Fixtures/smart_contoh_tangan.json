@@ -1,0 +1,16 @@
+{
+  "candidates": [
+    {"label": "A", "anggota_id": 1, "beban": 24, "jeda": 2, "kompetensi": 3, "kehadiran": 0.9},
+    {"label": "B", "anggota_id": 2, "beban": 12, "jeda": 6, "kompetensi": 2, "kehadiran": 0.8},
+    {"label": "C", "anggota_id": 3, "beban": 18, "jeda": 10, "kompetensi": 1, "kehadiran": 1},
+    {"label": "D", "anggota_id": 4, "beban": 6, "jeda": 4, "kompetensi": 2, "kehadiran": 0.95}
+  ],
+  "expected_order": ["D", "B", "C", "A"],
+  "expected_scores": {"A": 0.2201, "B": 0.5243, "C": 0.3264, "D": 0.6892},
+  "expected_utilities": {
+    "A": [0, 0.0666666667, 1, 0.9],
+    "B": [0.6666666667, 0.2, 0.5, 0.8],
+    "C": [0.3333333333, 0.3333333333, 0, 1],
+    "D": [1, 0.1333333333, 0.5, 0.95]
+  }
+}

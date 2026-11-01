@@ -22,7 +22,7 @@
 </form>
 
 <div class="panel">
-  <div class="table-scroll">
+  <div class="table-scroll member-list-scroll">
     <table>
       <thead>
         <tr>

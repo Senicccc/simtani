@@ -113,17 +113,24 @@ a,button,input,select,textarea{touch-action:manipulation}
 .mobile-topbar{
   display:none;
   align-items:center;gap:12px;
-  padding:12px 16px;
+  padding:8px 16px;
+  min-height:64px;
   background:var(--bg);border-bottom:1px solid var(--line-soft);
-  position:sticky;top:0;z-index:20;
+  box-shadow:0 2px 10px rgba(31,77,44,.05);
+  position:sticky;top:0;z-index:40;
 }
 .mobile-topbar-brand{display:flex;align-items:center;gap:8px;font-weight:600;color:var(--green-900);font-size:15px}
 .icon-btn{
-  background:none;border:none;color:var(--green-900);cursor:pointer;
-  padding:6px;border-radius:8px;display:flex;
-  transition:background .15s var(--ease);
+  width:44px;height:44px;flex:none;
+  align-items:center;justify-content:center;
+  background:var(--bg);border:1px solid var(--line-soft);color:var(--green-900);cursor:pointer;
+  padding:0;border-radius:10px;display:flex;
+  transition:background .15s var(--ease),border-color .15s var(--ease);
 }
-.icon-btn:hover{background:var(--green-100)}
+.icon-btn:hover{background:var(--green-100);border-color:var(--line)}
+.icon-btn .close-icon{display:none}
+body.menu-open .mobile-topbar .icon-btn .menu-icon{display:none}
+body.menu-open .mobile-topbar .icon-btn .close-icon{display:block}
 #sidebar-backdrop{
   display:none;
   position:fixed;inset:0;background:rgba(31,43,34,.4);
@@ -298,12 +305,18 @@ main p a:hover{text-decoration:underline}
 @media (max-width:768px){
   .mobile-topbar{display:flex}
   .sidebar{
-    position:fixed;top:0;left:0;bottom:0;z-index:30;
+    position:fixed;top:64px;left:0;bottom:0;z-index:45;
+    width:min(280px,calc(100vw - 48px));
+    padding:18px 14px calc(18px + env(safe-area-inset-bottom,0px));
+    max-height:calc(100vh - 64px);
+    max-height:calc(100dvh - 64px);
     transform:translateX(-100%);
     box-shadow:var(--shadow-md);
   }
+  .sidebar .brand{display:none}
   .sidebar.open{transform:translateX(0)}
-  #sidebar-backdrop{display:block}
+  #sidebar-backdrop{display:block;inset:64px 0 0;z-index:35}
+  body.menu-open{overflow:hidden}
   main{padding:22px 18px}
   .profile-layout{flex-direction:column;align-items:center;text-align:center}
   .info-rows{width:100%}
@@ -357,6 +370,7 @@ button.table-action{background:none;border:0;font:inherit;font-size:12px;cursor:
 @media (max-width:520px){
   .form-row{grid-template-columns:1fr}
   .form-page.panel{padding:20px 18px}
+  .filter-bar>.check-row{width:fit-content;max-width:100%}
 }
 
 /* ---------- JADWAL & PENUGASAN ---------- */
@@ -413,6 +427,7 @@ button.table-action{background:none;border:0;font:inherit;font-size:12px;cursor:
 .candidate input{flex:none;width:18px;height:18px;margin:2px 0 0;accent-color:var(--green-600)}
 .candidate-name{display:block;font-size:14px;font-weight:500}
 .candidate-reason{display:block;margin-top:2px;font-size:12px;color:var(--text-muted);line-height:1.45}
+.candidate-score{display:block;margin-top:5px;font-size:11px;color:var(--green-900);line-height:1.45}
 
 @media (max-width:520px){
   .panel-body{padding:18px 16px}
@@ -499,8 +514,13 @@ button.table-action{background:none;border:0;font:inherit;font-size:12px;cursor:
   .mobile-topbar{width:100%}
   main{padding:18px 16px}
 
-  /* Drawer memenuhi tinggi layar yang benar-benar terlihat (tombol Keluar tidak tertutup bar browser iOS) */
-  .sidebar{height:auto}
+  .sidebar{
+    bottom:auto;
+    height:calc(100vh - 64px);
+    height:calc(100dvh - 64px);
+    max-height:calc(100vh - 64px);
+    max-height:calc(100dvh - 64px);
+  }
 
   /* Tabel lebih rapat agar muat lebih banyak kolom sebelum perlu digeser */
   .table-scroll{-webkit-overflow-scrolling:touch}
@@ -625,4 +645,43 @@ button.table-action{background:none;border:0;font:inherit;font-size:12px;cursor:
 }
 @media (prefers-reduced-motion:reduce){
   .auth-field input,.auth-submit{transition:none}
+}
+
+@media (max-width:520px){
+  .page-head>.btn-outline{justify-content:center;min-height:46px;width:100%}
+  .filter-bar{display:grid;grid-template-columns:1fr;gap:8px}
+  .filter-bar input,.filter-bar select,.filter-bar .btn-primary{min-height:48px;width:100%;font-size:16px}
+  .member-list-scroll{overflow:visible}
+  .member-list-scroll table,.member-list-scroll tbody{display:block;width:100%}
+  .member-list-scroll table{min-width:0}
+  .member-list-scroll thead{
+    position:absolute;width:1px;height:1px;margin:-1px;padding:0;
+    overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0
+  }
+  .member-list-scroll tbody{display:grid;gap:10px;padding:10px}
+  .member-list-scroll tbody tr{
+    display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px 12px;
+    padding:14px;border:1px solid var(--line-soft);border-radius:10px;
+    background:var(--bg);box-shadow:var(--shadow-sm)
+  }
+  .member-list-scroll tbody td{min-width:0;padding:0!important;border:0!important}
+  .member-list-scroll tbody td:nth-child(2){grid-column:1/-1;grid-row:1}
+  .member-list-scroll tbody td:nth-child(1){grid-column:1;grid-row:2}
+  .member-list-scroll tbody td:nth-child(3){grid-column:2;grid-row:2;justify-self:end}
+  .member-list-scroll tbody td:nth-child(4){
+    grid-column:1/-1;grid-row:3;padding-top:8px!important;
+    border-top:1px solid var(--line-soft)!important
+  }
+  .member-list-scroll tbody td:nth-child(1)::before,
+  .member-list-scroll tbody td:nth-child(3)::before{
+    display:block;margin-bottom:3px;color:var(--text-muted);
+    font-size:11px;font-weight:600
+  }
+  .member-list-scroll tbody td:nth-child(1)::before{content:"Nomor anggota"}
+  .member-list-scroll tbody td:nth-child(3)::before{content:"Status"}
+  .member-list-scroll tbody td[colspan]{grid-column:1/-1;padding:20px!important}
+  .member-list-scroll tbody td[colspan]::before{display:none}
+  .member-list-scroll .empty-state{padding:10px 4px}
+  .member-list-scroll .row-actions{justify-content:flex-start;gap:8px}
+  .member-list-scroll .row-actions .table-action{min-height:44px;padding:10px 14px}
 }

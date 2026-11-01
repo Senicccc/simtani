@@ -11,7 +11,11 @@ use RuntimeException;
 
 class AutoScheduleService
 {
-    public function __construct(private JadwalStatusService $statuses) {}
+    public function __construct(
+        private JadwalStatusService $statuses,
+        private SmartCriteriaService $smartCriteria,
+        private SmartScoringService $smartScoring,
+    ) {}
 
     public function recommendationsForSchedule(Jadwal $jadwal, ScheduleConflictService $conflicts): array
     {
@@ -92,12 +96,42 @@ class AutoScheduleService
                 $selected[] = $candidate;
             }
 
+            $selectedIds = array_fill_keys($selectedMemberIds, true);
+            $algorithm = config('smart.algoritma') === 'legacy' ? 'legacy' : 'smart';
+            $createdAt = now();
+            $logRows = array_map(static fn (array $candidate, int $index): array => [
+                'jadwal_id' => $jadwal->id,
+                'anggota_id' => $candidate['anggota_id'],
+                'algoritma' => $algorithm,
+                'peringkat' => $candidate['peringkat'] ?? $index + 1,
+                'skor' => round((float) ($candidate['skor'] ?? 0), 6),
+                'rincian' => json_encode(
+                    $candidate['rincian'] ?? ['metode' => 'legacy', 'skor_tersedia' => false],
+                    JSON_THROW_ON_ERROR,
+                ),
+                'dipilih' => isset($selectedIds[$candidate['anggota_id']]),
+                'dibuat_oleh' => auth()->id(),
+                'created_at' => $createdAt,
+            ], $recommendations['candidates'], array_keys($recommendations['candidates']));
+            DB::table('rekomendasi_penugasan_log')->insert($logRows);
+
             return $selected;
         });
     }
 
     /**
-     * @return array<int, array{anggota_id: int, nama_lengkap: string, nomor_anggota: string, tingkat_kemampuan: ?string, jumlah_tugas_aktif: int, jumlah_tugas_selesai: int, reason: string}>
+     * @return array<int, array{
+     *     anggota_id: int,
+     *     nama_lengkap: string,
+     *     nomor_anggota: string,
+     *     tingkat_kemampuan: ?string,
+     *     jumlah_tugas_aktif: int,
+     *     jumlah_tugas_selesai: int,
+     *     reason: string,
+     *     skor?: float,
+     *     peringkat?: int,
+     *     rincian?: array<string, float|int>
+     * }>
      */
     public function manualRecommendationsForSchedule(Jadwal $jadwal, ScheduleConflictService $conflicts): array
     {
@@ -105,9 +139,74 @@ class AutoScheduleService
     }
 
     /**
-     * @return array<int, array{anggota_id: int, nama_lengkap: string, nomor_anggota: string, tingkat_kemampuan: ?string, jumlah_tugas_aktif: int, jumlah_tugas_selesai: int, reason: string}>
+     * @return array<int, array{
+     *     anggota_id: int,
+     *     nama_lengkap: string,
+     *     nomor_anggota: string,
+     *     tingkat_kemampuan: ?string,
+     *     jumlah_tugas_aktif: int,
+     *     jumlah_tugas_selesai: int,
+     *     reason: string,
+     *     skor?: float,
+     *     peringkat?: int,
+     *     rincian?: array<string, float|int>
+     * }>
      */
     private function candidatesForSchedule(Jadwal $jadwal, ScheduleConflictService $conflicts): array
+    {
+        if (config('smart.algoritma') === 'legacy') {
+            return $this->legacyCandidatesForSchedule($jadwal, $conflicts);
+        }
+
+        $criteriaOrder = config('smart.urutan_kriteria', ['beban', 'jeda', 'kompetensi', 'kehadiran']);
+        $weights = $this->smartScoring->rocWeights($criteriaOrder);
+        $candidates = $this->legacyCandidatesForSchedule($jadwal, $conflicts);
+        if ($candidates === []) {
+            return [];
+        }
+
+        $memberIds = array_column($candidates, 'anggota_id');
+        $criteria = $this->smartCriteria->forCandidates($jadwal, $memberIds);
+        $ranked = $this->smartScoring->rank(array_map(
+            static fn (array $candidate): array => [
+                'anggota_id' => $candidate['anggota_id'],
+                ...$criteria[$candidate['anggota_id']],
+            ],
+            $candidates,
+        ), $weights, (int) config('smart.jeda_maksimum_hari', 30));
+        $candidatesById = array_column($candidates, null, 'anggota_id');
+
+        return array_map(function (array $rankedCandidate, int $index) use ($candidatesById): array {
+            $candidate = $candidatesById[$rankedCandidate['anggota_id']];
+            $details = [
+                'beban_jam' => $rankedCandidate['beban'],
+                'jeda_hari' => $rankedCandidate['jeda'],
+                'kompetensi_level' => $rankedCandidate['kompetensi'],
+                'kehadiran' => $rankedCandidate['kehadiran'],
+                ...$rankedCandidate['utilitas'],
+            ];
+            $competency = $candidate['tingkat_kemampuan'] ?? 'pemula';
+            $reason = $candidate['reason']
+                .' | Skor SMART '.number_format($rankedCandidate['skor'], 3, ',', '.')
+                .' (beban '.$this->formatNumber($rankedCandidate['beban']).' jam'
+                .', jeda '.$rankedCandidate['jeda'].' hari'
+                .', kompetensi '.$competency
+                .', hadir '.number_format($rankedCandidate['kehadiran'] * 100, 0, ',', '.').'%)';
+
+            return [
+                ...$candidate,
+                'skor' => $rankedCandidate['skor'],
+                'peringkat' => $index + 1,
+                'rincian' => $details,
+                'reason' => $reason,
+            ];
+        }, $ranked, array_keys($ranked));
+    }
+
+    /**
+     * @return array<int, array{anggota_id: int, nama_lengkap: string, nomor_anggota: string, tingkat_kemampuan: ?string, jumlah_tugas_aktif: int, jumlah_tugas_selesai: int, reason: string}>
+     */
+    private function legacyCandidatesForSchedule(Jadwal $jadwal, ScheduleConflictService $conflicts): array
     {
         $jadwal->loadMissing('jenisPekerjaan');
         $members = User::query()
@@ -172,6 +271,11 @@ class AutoScheduleService
 
             return $candidate;
         }, $candidates);
+    }
+
+    private function formatNumber(float $value): string
+    {
+        return rtrim(rtrim(number_format($value, 2, ',', '.'), '0'), ',');
     }
 
     /**
