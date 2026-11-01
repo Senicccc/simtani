@@ -3,56 +3,46 @@
 @section('title', 'Beranda Admin')
 
 @section('content')
-<h2>Beranda Admin</h2>
-<div class="stat-row">
-  <a href="{{ route('admin.anggota.index', ['status' => 1]) }}" class="stat-card">
-    <div class="k">Anggota aktif</div>
-    <div class="v">{{ $activeMembers }} orang</div>
-  </a>
-  <a href="{{ route('admin.jadwal.index') }}" class="stat-card">
-    <div class="k">Total jadwal</div>
-    <div class="v">{{ $totalSchedules }}</div>
-  </a>
-  <a href="{{ route('admin.jadwal.index', ['status' => 'scheduled']) }}" class="stat-card">
-    <div class="k">Terjadwal</div>
-    <div class="v">{{ $scheduledSchedules }}</div>
-  </a>
-  <a href="{{ route('admin.jadwal.index', ['status' => 'ongoing']) }}" class="stat-card">
-    <div class="k">Sedang berlangsung</div>
-    <div class="v">{{ $ongoingSchedules }}</div>
-  </a>
+<div class="page-head">
+  <div>
+    <h2>Beranda Admin</h2>
+    <p>Ringkasan kegiatan dan hal yang perlu ditindaklanjuti.</p>
+  </div>
 </div>
+
+<h3 class="section-title">Perlu Ditindaklanjuti</h3>
 <div class="stat-row">
-  <a href="{{ route('admin.jadwal.index', ['status' => 'completed']) }}" class="stat-card">
-    <div class="k">Jadwal selesai</div>
-    <div class="v">{{ $completedSchedules }}</div>
-  </a>
-  <a href="{{ route('admin.jadwal.index', ['needs_replacement' => 1]) }}" class="stat-card">
-    <div class="k">Posisi pengganti yang perlu diisi</div>
-    <div class="v">{{ $leaveActions }}</div>
-  </a>
-  <a href="{{ route('admin.penugasan.index', ['status' => 'active']) }}" class="stat-card">
-    <div class="k">Penugasan aktif</div>
-    <div class="v">{{ $tasksRunning }}</div>
-  </a>
-</div>
-<div class="stat-row">
-  <a href="{{ route('admin.penugasan.index', ['status' => 'waiting_verification']) }}" class="stat-card">
+  <a href="{{ route('admin.penugasan.index', ['status' => 'waiting_verification']) }}" class="stat-card {{ $tasksToVerify > 0 ? 'is-alert' : '' }}">
     <div class="k">Laporan menunggu pemeriksaan</div>
     <div class="v">{{ $tasksToVerify }}</div>
   </a>
-  <a href="{{ route('admin.permintaan-perubahan.index', ['status' => 'pending']) }}" class="stat-card">
+  <a href="{{ route('admin.permintaan-perubahan.index', ['status' => 'pending']) }}" class="stat-card {{ $pendingRequests > 0 ? 'is-alert' : '' }}">
     <div class="k">Permintaan perubahan menunggu diproses</div>
     <div class="v">{{ $pendingRequests }}</div>
   </a>
+  <a href="{{ route('admin.jadwal.index', ['needs_replacement' => 1]) }}" class="stat-card {{ $leaveActions > 0 ? 'is-alert' : '' }}">
+    <div class="k">Posisi pengganti yang perlu diisi</div>
+    <div class="v">{{ $leaveActions }}</div>
+  </a>
   <a href="{{ route('admin.upah.index', ['status_pembayaran' => 'belum_dibayar']) }}" class="stat-card">
     <div class="k">Upah belum dibayar</div>
-    <div class="v">{{ $unpaidWages }}</div>
+    <div class="v">{{ $unpaidWages }} pembayaran</div>
   </a>
 </div>
+
+<h3 class="section-title">Ringkasan</h3>
+<div class="stat-row">
+  <a href="{{ route('admin.anggota.index', ['status' => 1]) }}" class="stat-card"><div class="k">Anggota aktif</div><div class="v">{{ $activeMembers }} orang</div></a>
+  <a href="{{ route('admin.jadwal.index') }}" class="stat-card"><div class="k">Total jadwal</div><div class="v">{{ $totalSchedules }}</div></a>
+  <a href="{{ route('admin.jadwal.index', ['status' => 'scheduled']) }}" class="stat-card"><div class="k">Terjadwal</div><div class="v">{{ $scheduledSchedules }}</div></a>
+  <a href="{{ route('admin.jadwal.index', ['status' => 'ongoing']) }}" class="stat-card"><div class="k">Sedang berlangsung</div><div class="v">{{ $ongoingSchedules }}</div></a>
+  <a href="{{ route('admin.jadwal.index', ['status' => 'completed']) }}" class="stat-card"><div class="k">Jadwal selesai</div><div class="v">{{ $completedSchedules }}</div></a>
+  <a href="{{ route('admin.penugasan.index', ['status' => 'active']) }}" class="stat-card"><div class="k">Penugasan aktif</div><div class="v">{{ $tasksRunning }}</div></a>
+</div>
+
 <section class="stat-card admin-unpaid-wages">
   <div class="view-header">
-    <h3 style="margin:0">Daftar upah belum dibayar</h3>
+    <h3>Daftar upah belum dibayar</h3>
     <a href="{{ route('admin.upah.index', ['status_pembayaran' => 'belum_dibayar']) }}" class="btn-outline">Lihat semua upah belum dibayar ({{ $unpaidWages }})</a>
   </div>
   @if($unpaidWageItems->isNotEmpty())

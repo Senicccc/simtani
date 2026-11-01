@@ -3,7 +3,12 @@
 @section('title', 'Beranda Anggota')
 
 @section('content')
-<h2>Beranda Anggota</h2>
+<div class="page-head">
+  <div>
+    <h2>Beranda Anggota</h2>
+    <p>Ringkasan tugas dan upah Anda.</p>
+  </div>
+</div>
 <section class="stat-card member-quick-start" aria-labelledby="quick-start-title">
   <h3 id="quick-start-title">Presensi hari ini</h3>
   <p>Buka detail tugas untuk mencatat kehadiran, mengajukan izin, atau melakukan check-out pada tanggal kegiatan.</p>
@@ -13,18 +18,24 @@
   @forelse($memberTasks as $item)
     <article class="stat-card member-task-card">
       <h3>{{ $item->jadwal->nama_kegiatan }}</h3>
+      <p>
+        @include('admin.partials.status-badge', ['type' => 'tugas', 'status' => $item->status])
+        @if (today()->betweenIncluded($item->tanggalMulaiEfektif(), $item->tanggalSelesaiEfektif()))
+          <span class="badge-warn">Hari ini</span>
+        @endif
+      </p>
       <p><strong>Tanggal:</strong> {{ $item->tanggalMulaiEfektif()->format('d/m/Y') }} – {{ $item->tanggalSelesaiEfektif()->format('d/m/Y') }}</p>
       <p><strong>Lokasi:</strong> {{ $item->jadwal->lokasi }}</p>
       <a href="{{ route('anggota.tugas.show', $item) }}" class="btn-primary attendance-button">Lihat detail tugas dan presensi</a>
     </article>
   @empty
-    <p class="placeholder-note">Belum ada tugas aktif atau mendatang.</p>
+    <p class="placeholder-note">Belum ada tugas aktif atau mendatang. Tugas muncul setelah admin menugaskan Anda.</p>
   @endforelse
 </div>
 <div class="stat-row">
   <a href="{{ route('anggota.tugas.index') }}" class="stat-card">
     <div class="k">Tugas aktif</div>
-    <div class="v">{{ $activeTasks }} tugas · presensi tersedia di detail tugas</div>
+    <div class="v">{{ $activeTasks }}</div>
   </a>
   <a href="{{ route('anggota.tugas.index') }}" class="stat-card">
     <div class="k">Tugas mendatang</div>

@@ -17,7 +17,7 @@
   <dl class="detail-grid">
     <div><dt>Jenis pekerjaan</dt><dd>{{ $penugasan->jadwal->jenisPekerjaan->nama_pekerjaan }}</dd></div>
     <div><dt>Tanggal kegiatan</dt><dd>{{ $penugasan->tanggalMulaiEfektif()->format('d/m/Y') }} – {{ $penugasan->tanggalSelesaiEfektif()->format('d/m/Y') }}</dd></div>
-    <div><dt>Waktu</dt><dd>{{ $penugasan->jadwal->waktu_mulai }} - {{ $penugasan->jadwal->waktu_selesai }}</dd></div>
+    <div><dt>Waktu</dt><dd>{{ substr($penugasan->jadwal->waktu_mulai, 0, 5) }} – {{ substr($penugasan->jadwal->waktu_selesai, 0, 5) }}</dd></div>
     <div><dt>Lokasi</dt><dd>{{ $penugasan->jadwal->lokasi }}</dd></div>
     <div><dt>Jumlah hasil kerja</dt><dd>{{ $penugasan->jadwal->jumlah_satuan }} {{ $penugasan->jadwal->jenisPekerjaan->satuan }}</dd></div>
   </dl>
@@ -48,10 +48,11 @@
           <input type="hidden" name="tanggal" value="{{ $date->toDateString() }}">
           <input type="hidden" name="status" value="izin">
           <label for="leave-note-{{ $date->format('Ymd') }}">Alasan izin (wajib)</label>
-          <textarea id="leave-note-{{ $date->format('Ymd') }}" name="catatan" maxlength="1000" required>{{ old('catatan') }}</textarea>
+          <textarea id="leave-note-{{ $date->format('Ymd') }}" name="catatan" maxlength="1000" required>{{ old('tanggal') === $date->toDateString() ? old('catatan') : '' }}</textarea>
           <button type="submit" class="btn-outline attendance-button">Izin tanggal ini · minta pengganti</button>
         </form>
         <form method="post" action="{{ route('anggota.presensi.status', $penugasan) }}">
+             onsubmit="return confirm('Tandai tidak hadir pada {{ $date->format('d/m/Y') }}? Admin akan mencari pengganti.')">
           @csrf
           <input type="hidden" name="tanggal" value="{{ $date->toDateString() }}">
           <input type="hidden" name="status" value="tidak_hadir">
@@ -84,7 +85,7 @@
     @elseif($penugasan->jadwal->perlu_verifikasi)
       <p class="note">Setelah semua anggota menyelesaikan tugas dan admin menyetujui laporan, total upah dibagi rata ke daftar pembayaran.</p>
     @else
-      <p class="note">Tugas selesai otomatis saat laporan dikirim. Bagian upah dibagi rata setelah semua anggota menyelesaikan tugas.</p>
+      <p class="note">Tugas selesai otomatis saat laporan dikirim.</p>
     @endif
   @endif
   <a href="{{ route('anggota.upah.index') }}" class="btn-outline attendance-history-link">Lihat upah saya</a>

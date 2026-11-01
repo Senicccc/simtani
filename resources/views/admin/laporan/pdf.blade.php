@@ -2,6 +2,7 @@
 <html lang="id">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Laporan SIMTANI</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -10,14 +11,16 @@
     @page{size:A4 landscape;margin:14mm}
     *{box-sizing:border-box}
     body{margin:0;font-family:'DM Sans',Arial,Helvetica,sans-serif;font-size:11px;line-height:1.5;color:#1f2b22;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    .toolbar{margin-bottom:16px}
+    .toolbar{display:flex;gap:12px;align-items:center;margin-bottom:16px}
+    .toolbar .back{color:#3f7d4f;font-size:12px;text-decoration:none}
+    .toolbar .back:hover{text-decoration:underline}
     .toolbar button{padding:8px 14px;border:0;border-radius:6px;background:#3f7d4f;color:#fff;font:inherit;font-size:12px;cursor:pointer}
     header{margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #1f4d2c}
     h1{margin:0 0 4px;font-size:20px;color:#1f4d2c}
     .meta{margin:0;color:#556b5d}
     .meta span+span{margin-left:18px}
-    .summary{display:flex;gap:10px;margin:0 0 4px}
-    .summary div{flex:1;padding:8px 10px;border:1px solid #a9c9b0;background:#e8f2ea}
+    .summary{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 4px}
+    .summary div{flex:1 1 150px;padding:8px 10px;border:1px solid #a9c9b0;background:#e8f2ea}
     .summary b{display:block;margin-top:2px;font-size:14px;color:#1f4d2c}
     h2{margin:18px 0 6px;font-size:13px;color:#1f4d2c;break-after:avoid}
     table{width:100%;border-collapse:collapse;margin:0 0 6px}
@@ -30,15 +33,21 @@
     .foot{margin-top:16px;color:#6f8577;font-size:10px}
     @media print{.toolbar{display:none}}
     @media screen{body{max-width:1100px;margin:0 auto;padding:24px}}
+    @media screen and (max-width:768px){body{padding:12px}table{display:block;overflow-x:auto}}
   </style>
 </head>
 <body>
-  <div class="toolbar"><button type="button" onclick="window.print()">Cetak / Simpan PDF</button></div>
+    <div class="toolbar">
+    <button type="button" onclick="window.print()">Cetak / Simpan PDF</button>
+    <a href="{{ route('admin.laporan.index', request()->query()) }}" class="back">Kembali</a>
+  </div>
 
   <header>
     <h1>Laporan SIMTANI</h1>
     <p class="meta">
       <span>Periode: {{ $start ?: 'Awal' }} s/d {{ $end ?: 'Akhir' }}</span>
+      @if (!empty($namaKategori)) <span>Kategori: {{ $namaKategori }}</span> @endif
+      @if (!empty($namaAnggota)) <span>Anggota: {{ $namaAnggota }}</span> @endif
       <span>Filter nama: {{ $q ?: 'Semua nama' }}</span>
     </p>
   </header>
@@ -56,7 +65,9 @@
     <tbody>
       @forelse ($rekapJadwal as $item)
         <tr>
-          <td>{{ $item->tanggal?->format('d/m/Y') }}</td>
+          <td>
+            {{ $item->tanggal?->format('d/m/Y') }}@if ($item->tanggal && $item->tanggal_selesai && ! $item->tanggal_selesai->isSameDay($item->tanggal)) – {{ $item->tanggal_selesai->format('d/m/Y') }}@endif
+          </td>
           <td>{{ $item->nama_kegiatan }}</td>
           <td>{{ $item->jenisPekerjaan->nama_pekerjaan ?? '-' }}</td>
           <td>{{ $item->lokasi }}</td>
@@ -74,7 +85,9 @@
     <tbody>
       @forelse ($rekapTugas as $item)
         <tr>
-          <td>{{ $item->jadwal->tanggal?->format('d/m/Y') }}</td>
+            <td>
+            {{ $item->jadwal->tanggal?->format('d/m/Y') }}@if ($item->jadwal->tanggal && $item->jadwal->tanggal_selesai && ! $item->jadwal->tanggal_selesai->isSameDay($item->jadwal->tanggal)) – {{ $item->jadwal->tanggal_selesai->format('d/m/Y') }}@endif
+          </td>
           <td>{{ $item->jadwal->nama_kegiatan }}</td>
           <td>{{ $item->anggota->nama_lengkap }}</td>
           <td>{{ ['assigned' => 'Ditugaskan', 'in_progress' => 'Sedang dikerjakan', 'waiting_verification' => 'Menunggu pemeriksaan', 'completed' => 'Selesai', 'rejected' => 'Laporan ditolak', 'cancelled' => 'Dibatalkan'][$item->status] ?? $item->status }}</td>

@@ -17,33 +17,34 @@
       <thead>
         <tr>
           <th>Tugas Saya</th>
-          <th>Jenis</th>
+          <th>Status</th>
           <th>Tugas Tujuan</th>
           <th>Alasan</th>
-          <th>Status</th>
           <th>Catatan Admin</th>
         </tr>
       </thead>
       <tbody>
         @forelse ($permintaan as $item)
           <tr>
-            <td><a href="{{ route('anggota.tugas.show', $item->penugasan) }}" class="table-action">{{ $item->penugasan->jadwal->nama_kegiatan }}</a></td>
-            <td>{{ $item->jenis_permintaan === 'tukar' ? 'Pindah jadwal' : 'Sanggah tugas' }}</td>
+            <td>
+              <a href="{{ route('anggota.tugas.show', $item->penugasan) }}" class="table-action">{{ $item->penugasan->jadwal->nama_kegiatan }}</a>
+              <span class="cell-sub">{{ $item->jenis_permintaan === 'tukar' ? 'Pindah jadwal' : 'Sanggah tugas' }} · diajukan {{ $item->created_at?->format('d/m/Y') }}</span>
+            </td>
+            <td>@include('admin.partials.status-badge', ['type' => 'permintaan', 'status' => $item->status])</td>
             <td>
               @if ($item->targetJadwal)
                 {{ $item->targetJadwal->nama_kegiatan }} · {{ $item->targetJadwal->tanggal?->format('d/m/Y') }}
               @elseif ($item->targetPenugasan)
-                <a href="{{ route('anggota.tugas.show', $item->targetPenugasan) }}" class="table-action">{{ $item->targetPenugasan->jadwal->nama_kegiatan }} · {{ $item->targetPenugasan->anggota->nama_lengkap }}</a>
+                {{ $item->targetPenugasan->jadwal->nama_kegiatan }}
               @else
                 -
               @endif
             </td>
             <td class="cell-reason">{{ $item->alasan }}</td>
-            <td>@include('admin.partials.status-badge', ['type' => 'permintaan', 'status' => $item->status])</td>
             <td class="cell-reason">{{ $item->catatan_admin ?: '-' }}</td>
           </tr>
         @empty
-          <tr><td colspan="6"><div class="empty-state">Belum ada permintaan perubahan.</div></td></tr>
+          <tr><td colspan="5"><div class="empty-state">Belum ada permintaan. Ajukan jika Anda perlu pindah jadwal atau tidak sanggup mengerjakan tugas.</div></td></tr>
         @endforelse
       </tbody>
     </table>

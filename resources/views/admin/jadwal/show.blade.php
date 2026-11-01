@@ -112,4 +112,19 @@
     </table>
   </div>
 </div>
+
+<h3 class="section-title">Hapus Jadwal</h3>
+<div class="panel panel-body">
+  @if ($jadwal->penugasan->isEmpty())
+    <p class="note">Jadwal yang belum memiliki penugasan dapat dihapus permanen. Tindakan ini tidak dapat dibatalkan.</p>
+    <form method="post" action="{{ route('admin.jadwal.destroy', $jadwal) }}"
+          onsubmit="return confirm({{ \Illuminate\Support\Js::from('Hapus jadwal "'.$jadwal->nama_kegiatan.'" secara permanen?') }})">
+      @csrf
+      @method('DELETE')
+      <button type="submit" class="btn-danger">Hapus Jadwal</button>
+    </form>
+  @else
+    <p class="note">Jadwal ini sudah memiliki riwayat penugasan sehingga tidak dapat dihapus. Ubah statusnya menjadi Dibatalkan lewat Edit Jadwal.</p>
+  @endif
+</div>
 @endsection

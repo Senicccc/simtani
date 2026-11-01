@@ -9,6 +9,12 @@
   <h3>Presensi hari ini · {{ $today->format('d/m/Y') }}</h3>
   @if($penugasan->status === 'waiting_verification')
     <p class="note">Laporan tugas sedang diperiksa admin.</p>
+  @elseif($penugasan->status === 'rejected')
+    <p class="attendance-status-warning">Laporan Anda ditolak admin dan kehadiran ditandai tidak hadir tanpa upah.</p>
+    @if($penugasan->catatan_verifikasi)
+      <p class="note"><strong>Alasan admin:</strong> {{ $penugasan->catatan_verifikasi }}</p>
+    @endif
+    <p class="note">Jika menurut Anda ada kekeliruan, hubungi admin.</p>
   @elseif(!$canManageAttendance)
     <p class="note">Tugas ini sudah {{ $penugasan->status === 'completed' ? 'selesai' : 'tidak aktif' }}.</p>
   @elseif($today->lt($penugasan->tanggalMulaiEfektif()))
@@ -51,10 +57,11 @@
         <input type="hidden" name="tanggal" value="{{ $today->toDateString() }}">
         <input type="hidden" name="status" value="izin">
         <label for="leave-note-{{ $penugasan->id }}">Izin hari ini · tulis alasan</label>
-        <textarea id="leave-note-{{ $penugasan->id }}" name="catatan" maxlength="1000" required placeholder="Contoh: sakit atau ada keperluan keluarga">{{ old('catatan') }}</textarea>
+        <textarea id="leave-note-{{ $penugasan->id }}" name="catatan" maxlength="1000" required placeholder="Contoh: sakit atau ada keperluan keluarga">{{ old('tanggal') === $today->toDateString() ? old('catatan') : '' }}</textarea>
         <button type="submit" class="btn-outline attendance-button">Kirim izin · minta pengganti</button>
       </form>
-      <form method="post" action="{{ route('anggota.presensi.status', $penugasan) }}">
+            <form method="post" action="{{ route('anggota.presensi.status', $penugasan) }}"
+            onsubmit="return confirm('Tandai tidak hadir hari ini? Admin akan mencari pengganti.')">
         @csrf
         <input type="hidden" name="tanggal" value="{{ $today->toDateString() }}">
         <input type="hidden" name="status" value="tidak_hadir">

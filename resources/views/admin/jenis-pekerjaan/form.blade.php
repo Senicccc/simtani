@@ -15,7 +15,7 @@
     @error('satuan')
       <span class="error">{{ $message }}</span>
     @else
-      <span class="hint">Contoh: karung, blok, petak.</span>
+      <span class="hint">Contoh: karung, blok, petak.@if (isset($jenisPekerjaan) && $jenisPekerjaan->exists) Mengubah satuan juga mengubah tampilan di jadwal yang sudah ada.@endif</span>
     @enderror
   </div>
 </div>

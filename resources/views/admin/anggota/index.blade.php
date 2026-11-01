@@ -6,7 +6,7 @@
 <div class="page-head">
   <div>
     <h2>Anggota</h2>
-    <p>{{ $anggota->count() }} anggota terdaftar.</p>
+    <p>{{ $anggota->count() }} anggota ditampilkan.</p>
   </div>
   <a href="{{ route('admin.anggota.create') }}" class="btn-outline">+ Tambah Anggota</a>
 </div>
@@ -19,6 +19,9 @@
     <option value="0" @selected(request('status') === '0')>Nonaktif</option>
   </select>
   <button type="submit" class="btn-primary">Cari</button>
+  @if (request('q') || request('status') !== null && request('status') !== '')
+    <a href="{{ route('admin.anggota.index') }}" class="btn-outline">Bersihkan</a>
+  @endif
 </form>
 
 <div class="panel">

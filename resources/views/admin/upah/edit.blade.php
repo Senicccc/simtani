@@ -38,9 +38,13 @@
 
   <div class="field">
     <label for="metode_pembayaran">Metode pembayaran</label>
-    <input id="metode_pembayaran" name="metode_pembayaran" placeholder="Transfer atau tunai"
+    <input id="metode_pembayaran" name="metode_pembayaran" list="daftar-metode" maxlength="50" placeholder="Transfer atau tunai"
            value="{{ old('metode_pembayaran', $upah->metode_pembayaran) }}"
            class="@error('metode_pembayaran') is-invalid @enderror">
+    <datalist id="daftar-metode">
+      <option value="Transfer">
+      <option value="Tunai">
+    </datalist>
     @error('metode_pembayaran') <span class="error">{{ $message }}</span> @enderror
   </div>
 

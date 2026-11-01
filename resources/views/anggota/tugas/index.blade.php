@@ -36,7 +36,9 @@
       </div>
     </article>
   @empty
-    <div class="panel"><div class="empty-state">Belum ada tugas yang cocok.</div></div>
+    <div class="panel"><div class="empty-state">
+  {{ request()->filled('q') ? 'Tidak ada tugas yang cocok dengan pencarian.' : 'Belum ada tugas. Tugas muncul setelah admin menugaskan Anda ke sebuah jadwal.' }}
+</div></div>
   @endforelse
 </div>
 @endsection

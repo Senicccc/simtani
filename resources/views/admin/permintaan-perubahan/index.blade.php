@@ -37,13 +37,16 @@
       <tbody>
         @forelse ($permintaan as $item)
           <tr>
-            <td><span class="cell-name">{{ $item->diajukanOleh->nama_lengkap ?? '-' }}</span></td>
+            <td>
+              <span class="cell-name">{{ $item->diajukanOleh->nama_lengkap ?? '-' }}</span>
+              <span class="cell-sub">{{ $item->penugasan->jadwal->nama_kegiatan ?? '-' }} · diajukan {{ $item->created_at?->format('d/m/Y') }}</span>
+            </td>
             <td>{{ ['tukar' => 'Pindah jadwal', 'sanggah' => 'Sanggah tugas'][$item->jenis_permintaan] ?? $item->jenis_permintaan }}</td>
             <td class="cell-reason">{{ \Illuminate\Support\Str::limit($item->alasan, 120) }}</td>
             <td>@include('admin.partials.status-badge', ['type' => 'permintaan', 'status' => $item->status])</td>
             <td>
               <div class="row-actions">
-                <a href="{{ route('admin.permintaan-perubahan.show', $item) }}" class="table-action">Lihat Detail</a>
+                <a href="{{ route('admin.permintaan-perubahan.show', $item) }}" class="table-action">{{ $item->status === 'pending' ? 'Proses' : 'Lihat Detail' }}</a>
               </div>
             </td>
           </tr>

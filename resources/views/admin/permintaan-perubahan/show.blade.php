@@ -21,6 +21,10 @@
       <dt>Jenis</dt>
       <dd>{{ $permintaan->jenis_permintaan === 'tukar' ? 'Pindah ke jadwal lain' : 'Sanggah / tidak sanggup mengerjakan' }}</dd>
     </div>
+        <div>
+      <dt>Diajukan</dt>
+      <dd>{{ $permintaan->created_at->format('d/m/Y H:i') }}</dd>
+    </div>
     <div>
       <dt>Tugas pengaju</dt>
       <dd>
@@ -38,6 +42,11 @@
       <div>
         <dt>Jadwal tujuan riwayat lama</dt>
         <dd>{{ $permintaan->targetPenugasan->jadwal->nama_kegiatan }}<small>{{ $permintaan->targetPenugasan->jadwal->tanggal?->format('d/m/Y') }}</small></dd>
+      </div>
+    @elseif ($permintaan->jenis_permintaan === 'tukar')
+      <div>
+        <dt>Jadwal tujuan</dt>
+        <dd>Anggota tidak memilih jadwal tujuan.</dd>
       </div>
     @else
       <div>
@@ -79,7 +88,7 @@
           <option value="">Tidak ada pengganti, batalkan tugas</option>
           @foreach ($availableTargets as $target)
             <option value="{{ $target->id }}" @selected(old('target_jadwal_id', $permintaan->target_jadwal_id) == $target->id)>
-              {{ $target->nama_kegiatan }} · {{ $target->tanggal?->format('d/m/Y') }} · tersedia
+              {{ $target->nama_kegiatan }} · {{ $target->tanggal?->format('d/m/Y') }}
             </option>
           @endforeach
         </select>
@@ -92,14 +101,20 @@
     <div class="field">
       <label for="catatan_admin">Catatan admin</label>
       <textarea id="catatan_admin" name="catatan_admin" maxlength="2000" class="@error('catatan_admin') is-invalid @enderror">{{ old('catatan_admin') }}</textarea>
-      @error('catatan_admin') <span class="error">{{ $message }}</span> @enderror
+      @error('catatan_admin')
+        <span class="error">{{ $message }}</span>
+      @else
+        <span class="hint">Catatan ini terlihat oleh anggota.</span>
+      @enderror
     </div>
 
     <div class="form-actions">
-      <button name="action" value="approve" type="submit" class="btn-primary btn-auto">
+        <button name="action" value="approve" type="submit" class="btn-primary btn-auto"
+            onclick="return confirm('Setujui permintaan ini?')">
         {{ $permintaan->jenis_permintaan === 'tukar' ? 'Setujui Pindah Jadwal' : 'Setujui Sanggahan' }}
       </button>
-      <button name="action" value="reject" type="submit" class="btn-outline">Tolak Permintaan</button>
+      <button name="action" value="reject" type="submit" class="btn-danger"
+              onclick="return confirm('Tolak permintaan ini? Tugas pengaju tetap berjalan.')">Tolak Permintaan</button>
     </div>
     <p class="note">Jika ditolak, tugas pengaju tetap berjalan seperti semula.</p>
   </form>

@@ -45,6 +45,10 @@
         @else
           <span class="hint">Minimal 6 karakter.</span>
         @enderror
+        <label class="check-row show-password">
+          <input type="checkbox" id="tampilkan-sandi">
+          <span>Tampilkan kata sandi</span>
+        </label>
       </div>
     @endunless
   </div>
@@ -59,3 +63,11 @@
     <span>Anggota aktif</span>
   </label>
 </div>
+
+@push('scripts')
+<script>
+document.getElementById('tampilkan-sandi')?.addEventListener('change', function () {
+  document.getElementById('password').type = this.checked ? 'text' : 'password';
+});
+</script>
+@endpush

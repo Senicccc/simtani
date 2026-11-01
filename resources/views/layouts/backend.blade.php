@@ -13,7 +13,7 @@
 
 <div id="app-shell">
   <div class="mobile-topbar">
-    <button class="icon-btn" id="btn-menu" aria-label="Buka menu">
+    <button class="icon-btn" id="btn-menu" aria-label="Buka menu" aria-expanded="false" aria-controls="sidebar">
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
     </button>
     <div class="mobile-topbar-brand"><img src="{{ asset('images/Logo.png') }}" alt="" class="brand-logo">SIMTANI</div>
@@ -124,8 +124,8 @@
         <div class="banner-success" role="status">{{ session('success') }}</div>
       @endif
       @if ($errors->any())
-        <div class="banner" role="alert">
-          <ul style="margin:0;padding-left:16px">
+        <div class="banner banner-error" role="alert">
+          <ul class="error-list">
             @foreach ($errors->all() as $error)
               <li>{{ $error }}</li>
             @endforeach

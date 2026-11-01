@@ -9,6 +9,13 @@
   </div>
 </div>
 
+<div class="stat-row">
+  <div class="stat-card">
+    <div class="k">Belum dibayar</div>
+    <div class="v">Rp {{ number_format((float) $upah->where('status_pembayaran', 'belum_dibayar')->sum('jumlah_upah'), 0, ',', '.') }}</div>
+  </div>
+</div>
+
 <h3 class="section-title">Menunggu Pemeriksaan</h3>
 <div class="panel">
   <div class="table-scroll">
@@ -46,19 +53,20 @@
     <table>
       <thead>
         <tr>
-          <th>Tanggal Kegiatan</th>
           <th>Kegiatan</th>
           <th>Presensi</th>
           <th>Jumlah</th>
           <th>Status</th>
-          <th>Dibayar</th>
+          <th>Pembayaran</th>
         </tr>
       </thead>
       <tbody>
         @forelse ($upah as $item)
           <tr>
-            <td class="cell-num">{{ $item->penugasan->jadwal->tanggal?->format('d/m/Y') ?? '-' }}</td>
-            <td><a href="{{ route('anggota.tugas.show', $item->penugasan) }}" class="table-action">{{ $item->penugasan->jadwal->nama_kegiatan ?? '-' }}</a></td>
+            <td>
+              <a href="{{ route('anggota.tugas.show', $item->penugasan) }}" class="table-action">{{ $item->penugasan->jadwal->nama_kegiatan ?? '-' }}</a>
+              <span class="cell-sub">{{ $item->penugasan->jadwal->tanggal?->format('d/m/Y') ?? '-' }}</span>
+            </td>
             <td>@include('admin.partials.status-badge', ['type' => 'presensi', 'status' => $item->penugasan->presensi?->status ?? 'belum'])</td>
             <td class="cell-num">Rp {{ number_format((float) $item->jumlah_upah, 0, ',', '.') }}</td>
             <td>@include('admin.partials.status-badge', ['type' => 'bayar', 'status' => $item->status_pembayaran])</td>
@@ -72,7 +80,7 @@
             </td>
           </tr>
         @empty
-          <tr><td colspan="6"><div class="empty-state">Belum ada upah yang siap dibayar.</div></td></tr>
+          <tr><td colspan="5"><div class="empty-state">Belum ada upah. Upah muncul setelah semua tugas pada kegiatan selesai dan laporan disetujui.</div></td></tr>
         @endforelse
       </tbody>
     </table>

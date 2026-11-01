@@ -21,7 +21,7 @@
   <dl class="detail-grid">
     <div><dt>Jenis pekerjaan</dt><dd>{{ $jadwal->jenisPekerjaan->nama_pekerjaan }}</dd></div>
     <div><dt>Tanggal kegiatan</dt><dd>{{ $penugasan->tanggalMulaiEfektif()->format('d/m/Y') }} – {{ $penugasan->tanggalSelesaiEfektif()->format('d/m/Y') }}</dd></div>
-    <div><dt>Waktu</dt><dd>{{ $jadwal->waktu_mulai }} - {{ $jadwal->waktu_selesai }}</dd></div>
+    <div><dt>Waktu</dt><dd>{{ substr($jadwal->waktu_mulai, 0, 5) }} – {{ substr($jadwal->waktu_selesai, 0, 5) }}</dd></div>
     <div><dt>Lokasi</dt><dd>{{ $jadwal->lokasi }}</dd></div>
     <div>
       <dt>Total upah kegiatan</dt>
@@ -41,7 +41,7 @@
 
 @forelse ($jadwal->penugasan->where('status', '!=', 'cancelled') as $item)
   @php $bisaDiubah = in_array($item->status, ['assigned', 'in_progress'], true); @endphp
-  <div class="panel member-card {{ $item->is($penugasan) ? 'is-current' : '' }}">
+<div id="tugas-{{ $item->id }}" class="panel member-card {{ $item->is($penugasan) ? 'is-current' : '' }}">
     <div class="member-card__head">
       <div>
         <span class="cell-name">{{ $item->anggota->nama_lengkap }}</span>
@@ -97,15 +97,16 @@
 
         @if ($item->status === 'waiting_verification')
           <form method="post" action="{{ route('admin.penugasan.verify', $item) }}"
-                onsubmit="return confirm('Setujui laporan? Upah dibagi setelah semua anggota selesai.')">
+                onsubmit="return confirm({{ \Illuminate\Support\Js::from('Setujui laporan '.$item->anggota->nama_lengkap.'? Upah dibagi setelah semua anggota selesai.') }})">
             @csrf
             <button name="action" value="approve" type="submit" class="btn-primary">Setujui Laporan</button>
           </form>
-          <form method="post" action="{{ route('admin.penugasan.verify', $item) }}" class="verification-rejection">
+            <form method="post" action="{{ route('admin.penugasan.verify', $item) }}" class="verification-rejection"
+                onsubmit="return confirm({{ \Illuminate\Support\Js::from('Tolak laporan '.$item->anggota->nama_lengkap.' dan tandai tidak hadir tanpa upah?') }})">
             @csrf
             <label class="inline-label" for="reject-note-{{ $item->id }}">Alasan penolakan laporan</label>
             <textarea id="reject-note-{{ $item->id }}" name="catatan_verifikasi" required maxlength="2000" placeholder="Jelaskan alasan laporan ditolak"></textarea>
-            <button name="action" value="reject" type="submit" class="btn-danger" onclick="return confirm('Tolak laporan dan tandai anggota tidak hadir tanpa upah?')">Tolak Laporan · Tidak Hadir</button>
+            <button name="action" value="reject" type="submit" class="btn-danger">Tolak Laporan · Tidak Hadir</button>
           </form>
         @endif
       </div>

@@ -3,6 +3,13 @@
 @section('title', 'Laporan')
 
 @section('content')
+@php
+  $ringkasan = "Laporan Operasional SIM-Tani\n"
+    ."Periode: ".($start ?: 'awal')." s/d ".($end ?: 'akhir')."\n"
+    ."Jadwal: {$rekapJadwal->count()}\n"
+    ."Penugasan selesai: {$rekapTugas->where('status', 'completed')->count()}\n"
+    ."Presensi hadir: {$rekapPresensi->where('status', 'hadir')->count()} / {$rekapPresensi->count()}";
+@endphp
 <div class="page-head">
   <div>
     <h2>Laporan Operasional</h2>
@@ -11,6 +18,7 @@
   <div class="page-actions">
     <a href="{{ route('admin.laporan.export.csv', request()->query()) }}" class="btn-outline">Unduh CSV</a>
     <a href="{{ route('admin.laporan.export', request()->query()) }}" class="btn-outline">Cetak / PDF</a>
+    <a href="https://wa.me/?text={{ urlencode($ringkasan) }}" target="_blank" rel="noopener" class="btn-outline">Bagikan ke WhatsApp</a>
   </div>
 </div>
 
@@ -54,10 +62,10 @@
 </form>
 
 <div class="stat-row">
-  <div class="stat-card"><div class="k">Jadwal ditemukan</div><div class="v">{{ $rekapJadwal->count() }}</div></div>
-  <div class="stat-card"><div class="k">Penugasan selesai</div><div class="v">{{ $rekapTugas->where('status', 'completed')->count() }}</div></div>
-  <div class="stat-card"><div class="k">Presensi hadir</div><div class="v">{{ $rekapPresensi->where('status', 'hadir')->count() }} / {{ $rekapPresensi->count() }}</div></div>
-  <div class="stat-card"><div class="k">Upah belum dibayar</div><div class="v">Rp {{ number_format((float) $rekapUpah->where('status_pembayaran', 'belum_dibayar')->sum('jumlah_upah'), 0, ',', '.') }}</div></div>
+  <h3 class="section-title">Jadwal Kegiatan</h3>          →  <h3 class="section-title" id="rekap-jadwal">Jadwal Kegiatan</h3>
+<h3 class="section-title">Penugasan dan Hasil Kerja</h3> →  <h3 class="section-title" id="rekap-tugas">Penugasan dan Hasil Kerja</h3>
+<h3 class="section-title">Rincian Presensi</h3>          →  <h3 class="section-title" id="rekap-presensi">Rincian Presensi</h3>
+<h3 class="section-title">Rincian Upah</h3>              →  <h3 class="section-title" id="rekap-upah">Rincian Upah</h3>
 </div>
 
 <h3 class="section-title">Jadwal Kegiatan</h3>
@@ -72,7 +80,12 @@
       <tbody>
         @forelse ($rekapJadwal as $item)
           <tr>
-            <td class="cell-num">{{ $item->tanggal?->format('d/m/Y') }}</td>
+            <td class="cell-num">
+              {{ $item->tanggal?->format('d/m/Y') }}
+              @if ($item->tanggal && $item->tanggal_selesai && ! $item->tanggal_selesai->isSameDay($item->tanggal))
+                – {{ $item->tanggal_selesai->format('d/m/Y') }}
+              @endif
+            </td>
             <td><span class="cell-name">{{ $item->nama_kegiatan }}</span></td>
             <td>{{ $item->jenisPekerjaan->nama_pekerjaan ?? '-' }}</td>
             <td>{{ $item->lokasi }}</td>

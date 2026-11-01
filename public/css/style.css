@@ -626,3 +626,58 @@ button.table-action{background:none;border:0;font:inherit;font-size:12px;cursor:
 @media (prefers-reduced-motion:reduce){
   .auth-field input,.auth-submit{transition:none}
 }
+
+/* ---------- KOMPETENSI ANGGOTA ---------- */
+.kompetensi-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 10px}
+.kompetensi-row label{flex:1 1 auto;margin:0;font-size:14px;font-weight:500;color:var(--text)}
+.kompetensi-row select{flex:0 0 160px;width:160px}
+@media (max-width:420px){
+  .kompetensi-row{flex-direction:column;align-items:stretch;gap:6px;margin-bottom:14px}
+  .kompetensi-row select{flex:none;width:100%}
+}
+
+/* ---------- JARAK BANNER GALAT ---------- */
+.view>.banner{margin-bottom:16px}
+
+/* ================= TAMBAHAN: TIKET, VALIDASI, PAGINASI, DLL ================= */
+
+/* Tiket */
+.thread{display:grid;gap:12px;margin:0;padding:0;list-style:none}
+.msg{max-width:min(100%,560px);padding:12px 14px;border:1px solid var(--line-soft);border-radius:var(--radius);background:var(--bg)}
+.msg.is-admin{justify-self:end;background:var(--green-100);border-color:var(--line)}
+.msg-meta{display:flex;justify-content:space-between;gap:12px;margin-bottom:4px;font-size:11px;color:var(--text-muted)}
+.msg-body{margin:0;font-size:14px;line-height:1.55;white-space:pre-line}
+
+/* Validasi */
+.banner-error{background:#fbe9e6;border-color:#f1b9ae;color:#b3261e}
+.error-list{margin:0;padding-left:16px}
+.field input.is-invalid:focus,
+.field textarea.is-invalid:focus,
+.field select.is-invalid:focus{box-shadow:0 0 0 3px rgba(179,38,30,.15)}
+
+/* Paginasi (hanya dipakai jika controller memakai paginate()) */
+.pager{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-top:14px;font-size:13px}
+.pager-btn{padding:8px 14px;border:1px solid var(--green-600);border-radius:8px;background:var(--bg);color:var(--green-900)}
+a.pager-btn:hover{background:var(--green-100)}
+.pager-btn.is-disabled{border-color:var(--line);color:var(--text-muted)}
+.pager-info{color:var(--text-muted)}
+
+/* Lompat antar bagian (tidak tertutup topbar di HP) */
+.section-title{scroll-margin-top:16px}
+.member-card{scroll-margin-top:16px}
+@media (max-width:768px){.section-title,.member-card{scroll-margin-top:72px}}
+
+/* Lain-lain */
+.no-scroll{overflow:hidden}
+.panel+.section-note{margin-top:12px}
+.inline-form+.inline-form{margin-top:8px}
+.show-password{margin-top:8px;font-size:13px}
+.stat-card.is-alert{border-color:var(--amber-600);background:var(--amber-100)}
+.view-header h3{margin:0}
+.member-card__head .cell-name{min-width:0;overflow-wrap:anywhere}
+@media (max-width:520px){.task-card__action .btn-primary{width:100%}}
+
+/* Login dan welcome */
+.auth-help{margin:16px 0 0;text-align:center;font-size:13px;color:rgba(255,255,255,.84)}
+.auth-title{margin:0 0 8px;text-align:center;font-family:'Manrope','DM Sans',sans-serif;font-size:22px;font-weight:800}
+.auth-link{display:flex;align-items:center;justify-content:center;text-decoration:none}

@@ -25,10 +25,15 @@
       'sudah_dibayar' => ['Sudah dibayar', 'badge'],
       'belum_dibayar' => ['Belum dibayar', 'badge-warn'],
     ],
-        'permintaan' => [
+    'permintaan' => [
       'pending'  => ['Menunggu diproses', 'badge-warn'],
       'approved' => ['Disetujui', 'badge'],
       'rejected' => ['Ditolak', 'badge-danger'],
+    ],
+    'tiket' => [
+      'open'        => ['Terbuka', 'badge-warn'],
+      'in_progress' => ['Diproses', 'badge'],
+      'resolved'    => ['Selesai', 'badge-muted'],
     ],
   ];
   [$label, $class] = $maps[$type][$status] ?? [ucfirst(str_replace('_', ' ', (string) $status)), 'badge-muted'];

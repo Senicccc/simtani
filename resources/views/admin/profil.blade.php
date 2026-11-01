@@ -37,7 +37,7 @@
       <div class="field">
         <label for="nomor_wa">Nomor WhatsApp</label>
         <input id="nomor_wa" name="nomor_wa" value="{{ old('nomor_wa', $user->nomor_wa) }}"
-               inputmode="tel" autocomplete="tel" class="@error('nomor_wa') is-invalid @enderror">
+               inputmode="tel" autocomplete="tel" placeholder="08123456789" maxlength="20" class="@error('nomor_wa') is-invalid @enderror">
         @error('nomor_wa') <span class="error">{{ $message }}</span> @enderror
       </div>
     </div>

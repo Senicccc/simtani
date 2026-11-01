@@ -45,7 +45,7 @@
               </td>
               <td>
                 <div class="row-actions">
-                  <a href="{{ route('admin.penugasan.show', $penugasan) }}" class="table-action">Periksa Laporan</a>
+                  <a href="{{ route('admin.penugasan.show', $penugasan) }}#tugas-{{ $penugasan->id }}" class="table-action">Periksa Laporan</a>
                 </div>
               </td>
             </tr>
@@ -83,7 +83,7 @@
           <th>Presensi</th>
           <th>Jumlah</th>
           <th>Status</th>
-          <th>Dibayar</th>
+          <th>Pembayaran</th>
           <th class="col-end">Aksi</th>
         </tr>
       </thead>
@@ -107,7 +107,8 @@
               <div class="row-actions">
                 <a href="{{ route('admin.upah.edit', $item) }}" class="table-action">Edit Pembayaran</a>
                 @if ($item->status_pembayaran === 'belum_dibayar')
-                  <form method="post" action="{{ route('admin.upah.mark-paid', $item) }}">
+                        <form method="post" action="{{ route('admin.upah.mark-paid', $item) }}"
+                        onsubmit="return confirm({{ \Illuminate\Support\Js::from('Tandai upah '.($item->penugasan->anggota->nama_lengkap ?? 'anggota ini').' sebagai sudah dibayar?') }})">
                     @csrf
                     <button type="submit" class="table-action">Tandai Dibayar</button>
                   </form>

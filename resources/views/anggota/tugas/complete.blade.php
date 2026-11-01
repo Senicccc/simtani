@@ -13,7 +13,8 @@
   <a href="{{ route('anggota.tugas.show', $penugasan) }}" class="btn-outline">Kembali ke detail tugas</a>
 </div>
 
-<form method="post" action="{{ route('anggota.tugas.complete', $penugasan) }}" enctype="multipart/form-data" class="form-page panel">
+<form method="post" action="{{ route('anggota.tugas.complete', $penugasan) }}" enctype="multipart/form-data" class="form-page panel"
+      onsubmit="return confirm({{ \Illuminate\Support\Js::from($penugasan->jadwal->perlu_verifikasi ? 'Kirim laporan ini untuk diperiksa admin?' : 'Selesaikan tugas ini sekarang?') }})">
   @csrf
 
   @if($penugasan->jadwal->perlu_verifikasi)
@@ -39,12 +40,14 @@
   </div>
 
   <div class="field">
-    <label for="bukti_selesai">Bukti foto (boleh dikosongkan)</label>
-    <input id="bukti_selesai" type="file" name="bukti_selesai" accept=".jpg,.jpeg,.png,.webp,.pdf" class="@error('bukti_selesai') is-invalid @enderror">
+    <label for="bukti_selesai">Bukti foto atau PDF (boleh dikosongkan)</label>
+    <input id="bukti_selesai" type="file" name="bukti_selesai"
+           accept="image/jpeg,image/png,image/webp,application/pdf" data-maks-mb="5"
+           class="@error('bukti_selesai') is-invalid @enderror">
     @error('bukti_selesai')
       <span class="error">{{ $message }}</span>
     @else
-      <span class="hint">Format JPG, PNG, WEBP, atau PDF.</span>
+      <span class="hint">JPG, PNG, WEBP, atau PDF, maksimal 5 MB.</span>
     @enderror
   </div>
 
@@ -52,4 +55,22 @@
     <button type="submit" class="btn-primary">{{ $penugasan->jadwal->perlu_verifikasi ? 'Kirim untuk Diperiksa' : 'Laporkan dan Selesaikan Tugas' }}</button>
   </div>
 </form>
+
 @endsection
+
+@push('scripts')
+<script>
+(function () {
+  const input = document.getElementById('bukti_selesai');
+  if (!input) return;
+  input.addEventListener('change', function () {
+    const file = input.files[0];
+    const maks = Number(input.dataset.maksMb) * 1024 * 1024;
+    if (file && file.size > maks) {
+      alert('Ukuran file maksimal ' + input.dataset.maksMb + ' MB. Pilih file yang lebih kecil.');
+      input.value = '';
+    }
+  });
+})();
+</script>
+@endpush
