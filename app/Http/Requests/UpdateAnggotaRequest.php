@@ -20,6 +20,9 @@ class UpdateAnggotaRequest extends FormRequest
             'email' => ['nullable', 'email', Rule::unique('users', 'email')->ignore($this->route('anggota'))],
             'status_aktif' => ['boolean'],
             'alamat' => ['nullable', 'string'],
+            'kompetensi' => ['sometimes', 'array'],
+            'kompetensi.*.jenis_pekerjaan_id' => ['required', 'integer', 'distinct', Rule::exists('jenis_pekerjaan', 'id')],
+            'kompetensi.*.tingkat_kemampuan' => ['present', 'nullable', Rule::in(['pemula', 'menengah', 'mahir'])],
         ];
     }
 }

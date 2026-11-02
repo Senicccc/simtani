@@ -9,7 +9,7 @@
   <a href="{{ route('admin.anggota.index') }}" class="btn-outline">Kembali ke daftar</a>
 </div>
 
-<form method="post" action="{{ route('admin.anggota.update', $anggota) }}" class="form-page panel">
+<form method="post" action="{{ route('admin.anggota.update', $anggota) }}" class="form-page panel member-edit-form">
   @csrf
   @method('PUT')
   @include('admin.anggota.form')

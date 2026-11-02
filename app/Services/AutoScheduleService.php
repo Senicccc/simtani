@@ -185,20 +185,12 @@ class AutoScheduleService
                 'kehadiran' => $rankedCandidate['kehadiran'],
                 ...$rankedCandidate['utilitas'],
             ];
-            $competency = $candidate['tingkat_kemampuan'] ?? 'pemula';
-            $reason = $candidate['reason']
-                .' | Skor SMART '.number_format($rankedCandidate['skor'], 3, ',', '.')
-                .' (beban '.$this->formatNumber($rankedCandidate['beban']).' jam'
-                .', jeda '.$rankedCandidate['jeda'].' hari'
-                .', kompetensi '.$competency
-                .', hadir '.number_format($rankedCandidate['kehadiran'] * 100, 0, ',', '.').'%)';
 
             return [
                 ...$candidate,
                 'skor' => $rankedCandidate['skor'],
                 'peringkat' => $index + 1,
                 'rincian' => $details,
-                'reason' => $reason,
             ];
         }, $ranked, array_keys($ranked));
     }
@@ -273,11 +265,6 @@ class AutoScheduleService
         }, $candidates);
     }
 
-    private function formatNumber(float $value): string
-    {
-        return rtrim(rtrim(number_format($value, 2, ',', '.'), '0'), ',');
-    }
-
     /**
      * @param  array<int, array<string, mixed>>  $candidates
      */
@@ -300,11 +287,12 @@ class AutoScheduleService
 
     private function candidateReason(int $activeTasks, int $completedTasks, ?string $skillLevel): string
     {
-        $reason = $activeTasks.' tugas aktif, '.$completedTasks.' tugas selesai';
+        $reason = $activeTasks === 0 ? 'Belum ada tugas aktif' : $activeTasks.' tugas aktif';
+        $reason .= ' · '.$completedTasks.' tugas selesai';
 
         return $skillLevel
-            ? $reason.', kompetensi '.$skillLevel
-            : $reason.', belum ada kompetensi yang tercatat';
+            ? $reason.' · Kemampuan '.$skillLevel
+            : $reason.' · Kemampuan belum dicatat';
     }
 
     private function abilityOrder(?string $level): int

@@ -1,12 +1,14 @@
 @extends('layouts.backend')
-@section('title', 'Upah')
+@section('title', 'Upah & Verifikasi')
 
 @section('content')
 <div class="page-head">
   <div>
-    <h2>Upah</h2>
+    <h2>Upah dan verifikasi</h2>
     @if ($selectedSchedule)
       <p>Upah kegiatan: {{ $selectedSchedule->nama_kegiatan }}</p>
+    @else
+      <p>Periksa laporan tugas, lalu pantau pembayaran anggota dari satu halaman.</p>
     @endif
   </div>
   @if ($selectedSchedule)
@@ -19,7 +21,20 @@
 @endif
 
 @if (! request()->filled('status_pembayaran'))
-  <h3 class="section-title">{{ $selectedSchedule ? 'Laporan kegiatan yang perlu diperiksa' : 'Laporan yang perlu diperiksa' }}</h3>
+  <nav class="wage-workflow" aria-label="Langkah mengelola laporan dan upah">
+    <a href="#verifikasi-upah">
+      <span class="workflow-number">1</span>
+      <span><strong>Periksa laporan</strong><small>{{ $menungguVerifikasi->count() }} laporan menunggu persetujuan</small></span>
+    </a>
+    <a href="#daftar-pembayaran">
+      <span class="workflow-number">2</span>
+      <span><strong>Kelola pembayaran</strong><small>Lihat dan perbarui status upah</small></span>
+    </a>
+  </nav>
+@endif
+
+@if (! request()->filled('status_pembayaran'))
+  <h3 class="section-title" id="verifikasi-upah">{{ $selectedSchedule ? 'Laporan kegiatan yang perlu diperiksa' : 'Laporan yang perlu diperiksa' }}</h3>
   <p class="section-note">Tugas yang menunggu persetujuan admin. Setelah disetujui, upah masuk ke daftar pembayaran.</p>
   <div class="panel">
     <div class="table-scroll">
@@ -58,7 +73,7 @@
   </div>
 @endif
 
-<h3 class="section-title">Daftar Pembayaran</h3>
+<h3 class="section-title" id="daftar-pembayaran">Daftar pembayaran</h3>
 <form method="get" class="filter-bar">
   @if ($selectedSchedule)
     <input type="hidden" name="jadwal_id" value="{{ $selectedSchedule->id }}">

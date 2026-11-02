@@ -44,8 +44,8 @@
 </div>
 
 <div class="panel panel-body">
-  <h3>Penugasan Otomatis</h3>
-  <p class="note">Rekomendasi mempertimbangkan tugas aktif, riwayat penyelesaian, kecocokan kompetensi, dan bentrok jadwal. Anggota tetap dapat dipilih meski kompetensinya belum dicatat.</p>
+  <h3>Rekomendasi anggota</h3>
+  <p class="note">Anggota diurutkan berdasarkan beban kegiatan, jeda sejak tugas terakhir, kemampuan pada pekerjaan ini, dan catatan kehadiran. Anggota tanpa catatan kemampuan tetap dapat dipilih.</p>
   <p><a href="{{ route('admin.jadwal.penugasan', $jadwal) }}#tambah-anggota" class="btn-outline">Tambah anggota secara manual</a></p>
 
   @if ($autoSchedule['vacancies'] === 0)
@@ -62,19 +62,69 @@
       <fieldset class="fieldset-plain">
         <legend>Pilih {{ $autoSchedule['recommended_count'] }} anggota</legend>
         @foreach ($autoSchedule['candidates'] as $candidate)
-          <label class="candidate">
-            <input type="checkbox" name="selected_member_ids[]" value="{{ $candidate['anggota_id'] }}"
-                   @checked(in_array($candidate['anggota_id'], $autoSchedule['recommended_member_ids'], true))>
-            <span>
-              <span class="candidate-name">{{ $candidate['nama_lengkap'] }}</span>
-              <span class="candidate-reason">{{ $candidate['reason'] }}</span>
-              @if (isset($candidate['skor'], $candidate['rincian']))
-                <span class="candidate-score">
-                  Peringkat {{ $candidate['peringkat'] }} · beban {{ number_format($candidate['rincian']['beban_jam'], 2, ',', '.') }} jam · jeda {{ $candidate['rincian']['jeda_hari'] }} hari · hadir {{ number_format($candidate['rincian']['kehadiran'] * 100, 0, ',', '.') }}%
-                </span>
+          <div class="candidate">
+            <label class="candidate-select">
+              <input type="checkbox" name="selected_member_ids[]" value="{{ $candidate['anggota_id'] }}"
+                     @checked(in_array($candidate['anggota_id'], $autoSchedule['recommended_member_ids'], true))>
+              <span class="candidate-content">
+              <span class="candidate-heading">
+                <span class="candidate-name">{{ $candidate['nama_lengkap'] }}</span>
+                @if (isset($candidate['skor'], $candidate['rincian']))
+                  <span class="candidate-match">
+                    <strong>{{ number_format($candidate['skor'] * 100, 1, ',', '.') }}%</strong>
+                    <span>nilai kecocokan</span>
+                  </span>
+                @endif
+              </span>
+              @if (isset($candidate['peringkat']))
+                <span class="candidate-rank">Urutan rekomendasi {{ $candidate['peringkat'] }}</span>
               @endif
-            </span>
-          </label>
+              <span class="candidate-reason">{{ $candidate['reason'] }}</span>
+              </span>
+            </label>
+            @if (isset($candidate['skor'], $candidate['rincian']))
+              <details class="candidate-details">
+                <summary>Lihat detail kecocokan</summary>
+                <div class="candidate-details-content">
+                  <dl class="candidate-breakdown">
+                    <div>
+                      <dt>Beban kegiatan</dt>
+                      <dd>
+                        {{ number_format($candidate['rincian']['beban_jam'], 1, ',', '.') }} jam
+                        <span>{{ number_format($candidate['rincian']['u1'] * 100, 0, ',', '.') }}% cocok</span>
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Jeda sejak tugas terakhir</dt>
+                      <dd>
+                        {{ $candidate['rincian']['jeda_hari'] }} hari
+                        <span>{{ number_format($candidate['rincian']['u2'] * 100, 0, ',', '.') }}% cocok</span>
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Kemampuan untuk pekerjaan ini</dt>
+                      <dd>
+                        {{ $candidate['tingkat_kemampuan'] ? ucfirst($candidate['tingkat_kemampuan']) : 'Belum dicatat' }}
+                        <span>{{ number_format($candidate['rincian']['u3'] * 100, 0, ',', '.') }}% cocok</span>
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Kehadiran sebelumnya</dt>
+                      <dd>
+                        {{ number_format($candidate['rincian']['kehadiran'] * 100, 0, ',', '.') }}%
+                        <span>{{ number_format($candidate['rincian']['u4'] * 100, 0, ',', '.') }}% cocok</span>
+                      </dd>
+                    </div>
+                  </dl>
+                  <div class="candidate-history">
+                    <span>{{ $candidate['jumlah_tugas_aktif'] }} tugas aktif</span>
+                    <span>{{ $candidate['jumlah_tugas_selesai'] }} tugas selesai</span>
+                  </div>
+                  <p class="candidate-footnote">Angka kecocokan per aspek membantu membandingkan anggota. Riwayat tugas selesai ditampilkan sebagai informasi tambahan.</p>
+                </div>
+              </details>
+            @endif
+          </div>
         @endforeach
       </fieldset>
       <button type="submit" class="btn-primary btn-auto">Konfirmasi penugasan</button>

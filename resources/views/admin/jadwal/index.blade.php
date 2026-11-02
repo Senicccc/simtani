@@ -5,7 +5,10 @@
 <div class="page-head">
   <div>
     <h2>Jadwal</h2>
-    <p>{{ $jadwal->count() }} jadwal ditampilkan.</p>
+    <p>
+      Menampilkan {{ $jadwal->firstItem() ?? 0 }}-{{ $jadwal->lastItem() ?? 0 }}
+      dari {{ $jadwal->total() }} jadwal.
+    </p>
   </div>
   <a href="{{ route('admin.jadwal.create') }}" class="btn-outline">+ Tambah Jadwal</a>
 </div>
@@ -33,6 +36,7 @@
         <tr>
           <th>Kegiatan</th>
           <th>Tanggal</th>
+          <th>Anggota</th>
           <th>Status</th>
           <th class="col-end">Aksi</th>
         </tr>
@@ -47,6 +51,7 @@
             <td class="cell-num">
               {{ $item->tanggal?->format('d/m/Y') }}@if($item->tanggal_selesai && ! $item->tanggal_selesai->isSameDay($item->tanggal)) – {{ $item->tanggal_selesai->format('d/m/Y') }}@endif
             </td>
+            <td class="cell-num">{{ $item->anggota_terisi }}/{{ $item->jumlah_orang_dibutuhkan }} orang</td>
             <td>@include('admin.partials.status-badge', ['type' => 'jadwal', 'status' => $item->status])</td>
             <td>
               <div class="row-actions">
@@ -57,7 +62,7 @@
           </tr>
         @empty
           <tr>
-            <td colspan="4">
+            <td colspan="5">
               <div class="empty-state">
                 {{ request('status') || request()->boolean('needs_replacement') ? 'Tidak ada jadwal yang cocok dengan filter.' : 'Belum ada jadwal. Klik Tambah Jadwal untuk mulai.' }}
               </div>
@@ -68,4 +73,20 @@
     </table>
   </div>
 </div>
+
+@if ($jadwal->hasPages())
+  <nav class="row-actions" aria-label="Navigasi halaman jadwal">
+    @if ($jadwal->onFirstPage())
+      <span class="btn-outline" aria-disabled="true">Sebelumnya</span>
+    @else
+      <a href="{{ $jadwal->previousPageUrl() }}" class="btn-outline">Sebelumnya</a>
+    @endif
+    <span>Halaman {{ $jadwal->currentPage() }} dari {{ $jadwal->lastPage() }}</span>
+    @if ($jadwal->hasMorePages())
+      <a href="{{ $jadwal->nextPageUrl() }}" class="btn-outline">Berikutnya</a>
+    @else
+      <span class="btn-outline" aria-disabled="true">Berikutnya</span>
+    @endif
+  </nav>
+@endif
 @endsection
