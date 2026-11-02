@@ -53,3 +53,12 @@ Before deploying application updates, back up the production database and upload
 ## Access
 
 Use the production URL provided by the SIMTANI administrator. Sign-in access is managed by the organization.
+
+### Demo accounts
+
+These accounts are created by the demo seeder for local and testing environments only. They are not production credentials.
+
+| Role | Email | Password |
+|---|---|---|
+| Administrator | `admin1@simtani.test` | `password` |
+| Member | `dedi.prasetyo@simtani.local` | `anggota123` |
