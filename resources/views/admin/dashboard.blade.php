@@ -37,7 +37,7 @@
   </a>
 </div>
 <div class="stat-row">
-  <a href="{{ route('admin.penugasan.index', ['status' => 'waiting_verification']) }}" class="stat-card">
+  <a href="{{ route('admin.upah.index') }}#verifikasi-upah" class="stat-card">
     <div class="k">Laporan menunggu pemeriksaan</div>
     <div class="v">{{ $tasksToVerify }}</div>
   </a>

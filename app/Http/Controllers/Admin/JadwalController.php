@@ -25,15 +25,28 @@ class JadwalController extends Controller
 {
     public function index(Request $request, JadwalStatusService $statuses): View
     {
-        Jadwal::query()->whereNotIn('status', ['completed', 'cancelled'])->get()
-            ->each(fn (Jadwal $schedule) => $statuses->refresh($schedule));
-        $jadwal = Jadwal::with(['jenisPekerjaan', 'penugasan'])
+        Jadwal::query()
+            ->whereNotIn('status', ['completed', 'cancelled'])
+            ->chunkById(100, function ($schedules) use ($statuses): void {
+                $schedules->each(fn (Jadwal $schedule) => $statuses->refresh($schedule));
+            });
+
+        $query = Jadwal::with('jenisPekerjaan')
+            ->withCount(['penugasan as anggota_terisi' => fn ($query) => $query->where('status', '!=', 'cancelled')])
             ->when(in_array($request->input('status'), ['draft', 'scheduled', 'ongoing', 'completed', 'cancelled'], true), fn ($query) => $query->where('status', $request->input('status')))
-            ->orderBy('tanggal', 'desc')
-            ->get();
+            ->orderByDesc('tanggal')
+            ->orderByDesc('id');
+
         if ($request->boolean('needs_replacement')) {
-            $jadwal = $jadwal->filter(fn (Jadwal $schedule): bool => $statuses->pendingReplacementSlots($schedule) > 0)->values();
+            $replacementScheduleIds = Jadwal::with('penugasan.presensiHarian')
+                ->get()
+                ->filter(fn (Jadwal $schedule): bool => $statuses->pendingReplacementSlots($schedule) > 0)
+                ->modelKeys();
+
+            $query->whereIn('id', $replacementScheduleIds);
         }
+
+        $jadwal = $query->paginate(10)->withQueryString();
 
         return view('admin.jadwal.index', compact('jadwal'));
     }

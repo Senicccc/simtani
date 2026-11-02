@@ -4,9 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SIMTANI | @yield('title')</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{{ asset('css/style.css') }}">
 </head>
 <body>
@@ -133,6 +130,39 @@
           </ul>
         </div>
       @endif
+      @auth
+        @if (! request()->routeIs('admin.dashboard', 'anggota.dashboard'))
+          <nav class="breadcrumbs" aria-label="Breadcrumb">
+            @if (auth()->user()->role === 'admin')
+              @if (request()->routeIs('admin.upah.edit'))
+                <a href="{{ route('admin.dashboard') }}">Admin</a>
+                <span aria-hidden="true">›</span>
+                <a href="{{ route('admin.upah.index') }}">Upah</a>
+                <span aria-hidden="true">›</span>
+                <span aria-current="page">Edit pembayaran</span>
+              @elseif (request()->routeIs('admin.upah.index'))
+                <a href="{{ route('admin.dashboard') }}">Admin</a>
+                <span aria-hidden="true">›</span>
+                <a href="{{ route('admin.upah.index') }}#daftar-pembayaran">Upah</a>
+                <span aria-hidden="true">›</span>
+                @if (request()->filled('status_pembayaran') || request()->filled('jadwal_id'))
+                  <span aria-current="page">Daftar pembayaran</span>
+                @else
+                  <span aria-current="page">Verifikasi upah</span>
+                @endif
+              @else
+                <a href="{{ route('admin.dashboard') }}">Admin</a>
+                <span aria-hidden="true">›</span>
+                <span aria-current="page">@yield('title')</span>
+              @endif
+            @else
+              <a href="{{ route('anggota.dashboard') }}">Beranda anggota</a>
+              <span aria-hidden="true">›</span>
+              <span aria-current="page">@yield('title')</span>
+            @endif
+          </nav>
+        @endif
+      @endauth
       @yield('content')
     </section>
   </main>

@@ -32,7 +32,7 @@
         <div><dt>Lokasi</dt><dd>{{ $item->jadwal->lokasi }}</dd></div>
       </dl>
       <div class="task-card__action">
-        <a href="{{ route('anggota.tugas.show', $item) }}" class="btn-primary btn-auto attendance-button">Lihat detail tugas dan presensi</a>
+        <a href="{{ route('anggota.tugas.show', $item) }}" class="btn-primary btn-auto attendance-button">Buka tugas dan presensi</a>
       </div>
     </article>
   @empty

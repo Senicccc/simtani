@@ -6,8 +6,8 @@
 <h2>Beranda Anggota</h2>
 <section class="stat-card member-quick-start" aria-labelledby="quick-start-title">
   <h3 id="quick-start-title">Presensi hari ini</h3>
-  <p>Buka detail tugas untuk mencatat kehadiran, mengajukan izin, atau melakukan check-out pada tanggal kegiatan.</p>
-  <a href="{{ route('anggota.tugas.index') }}" class="btn-outline attendance-history-link">Lihat semua tugas</a>
+  <p>Presensi dicatat dari halaman detail tugas pada hari kegiatan.</p>
+  <a href="{{ route('anggota.tugas.index') }}" class="btn-primary btn-auto member-quick-start__button">Lihat tugas saya</a>
 </section>
 <div class="member-task-list">
   @forelse($memberTasks as $item)
@@ -15,40 +15,40 @@
       <h3>{{ $item->jadwal->nama_kegiatan }}</h3>
       <p><strong>Tanggal:</strong> {{ $item->tanggalMulaiEfektif()->format('d/m/Y') }} – {{ $item->tanggalSelesaiEfektif()->format('d/m/Y') }}</p>
       <p><strong>Lokasi:</strong> {{ $item->jadwal->lokasi }}</p>
-      <a href="{{ route('anggota.tugas.show', $item) }}" class="btn-primary attendance-button">Lihat detail tugas dan presensi</a>
+      <a href="{{ route('anggota.tugas.show', $item) }}" class="btn-primary attendance-button">Buka tugas dan presensi</a>
     </article>
   @empty
     <p class="placeholder-note">Belum ada tugas aktif atau mendatang.</p>
   @endforelse
 </div>
-<div class="stat-row">
-  <a href="{{ route('anggota.tugas.index') }}" class="stat-card">
-    <div class="k">Tugas aktif</div>
-    <div class="v">{{ $activeTasks }} tugas · presensi tersedia di detail tugas</div>
-  </a>
-  <a href="{{ route('anggota.tugas.index') }}" class="stat-card">
-    <div class="k">Tugas mendatang</div>
-    <div class="v">{{ $upcomingTasks }}</div>
-  </a>
+<h3 class="section-title member-section-title">Ringkasan aktivitas</h3>
+<div class="stat-row member-stat-grid" aria-label="Ringkasan aktivitas">
+    <a href="{{ route('anggota.tugas.index') }}" class="stat-card">
+      <span class="k">Tugas aktif</span>
+      <span class="v">{{ $activeTasks }} tugas</span>
+    </a>
+    <a href="{{ route('anggota.tugas.index') }}" class="stat-card">
+      <span class="k">Tugas mendatang</span>
+      <span class="v">{{ $upcomingTasks }} kegiatan</span>
+    </a>
+    <a href="{{ route('anggota.riwayat-tugas') }}" class="stat-card">
+      <span class="k">Tugas selesai</span>
+      <span class="v">{{ $completedTasks }} tugas</span>
+    </a>
+    <a href="{{ route('anggota.upah.index') }}" class="stat-card">
+      <span class="k">Upah belum dibayar</span>
+      <span class="v">{{ $unpaidWages }} pembayaran</span>
+    </a>
 </div>
-<div class="stat-row">
-  <a href="{{ route('anggota.riwayat-tugas') }}" class="stat-card">
-    <div class="k">Tugas selesai</div>
-    <div class="v">{{ $completedTasks }}</div>
-  </a>
-  <a href="{{ route('anggota.upah.index') }}" class="stat-card">
-    <div class="k">Upah belum dibayar</div>
-    <div class="v">{{ $unpaidWages }}</div>
-  </a>
-</div>
-<div class="stat-row">
+<h3 class="section-title member-section-title">Layanan lainnya</h3>
+<div class="member-shortcuts">
   <a href="{{ route('anggota.permintaan-perubahan.index') }}" class="stat-card">
-    <div class="k">Permintaan perubahan menunggu diproses</div>
-    <div class="v">{{ $pendingRequests }}</div>
+      <span class="k">Permintaan perubahan</span>
+      <span class="v">{{ $pendingRequests }} menunggu diproses</span>
   </a>
   <a href="{{ route('anggota.presensi.index') }}" class="stat-card">
-    <div class="k">Riwayat presensi</div>
-    <div class="v">Lihat catatan kehadiran</div>
+      <span class="k">Riwayat presensi</span>
+      <span class="v">Lihat catatan hadir dan izin</span>
   </a>
 </div>
 @endsection

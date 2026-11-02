@@ -3,23 +3,20 @@
 <head>
   <meta charset="utf-8">
   <title>Laporan SIMTANI</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
   <style>
     @page{size:A4 landscape;margin:14mm}
     *{box-sizing:border-box}
-    body{margin:0;font-family:'DM Sans',Arial,Helvetica,sans-serif;font-size:11px;line-height:1.5;color:#1f2b22;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;font-size:11px;line-height:1.5;color:#202b23;-webkit-print-color-adjust:exact;print-color-adjust:exact}
     .toolbar{margin-bottom:16px}
-    .toolbar button{padding:8px 14px;border:0;border-radius:6px;background:#3f7d4f;color:#fff;font:inherit;font-size:12px;cursor:pointer}
-    header{margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #1f4d2c}
-    h1{margin:0 0 4px;font-size:20px;color:#1f4d2c}
+    .toolbar button{padding:8px 14px;border:0;border-radius:6px;background:#17442d;color:#fff;font:inherit;font-size:12px;cursor:pointer}
+    header{margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #17442d}
+    h1{margin:0 0 4px;font-size:20px;color:#17442d}
     .meta{margin:0;color:#556b5d}
     .meta span+span{margin-left:18px}
     .summary{display:flex;gap:10px;margin:0 0 4px}
-    .summary div{flex:1;padding:8px 10px;border:1px solid #a9c9b0;background:#e8f2ea}
-    .summary b{display:block;margin-top:2px;font-size:14px;color:#1f4d2c}
-    h2{margin:18px 0 6px;font-size:13px;color:#1f4d2c;break-after:avoid}
+    .summary div{flex:1;padding:8px 10px;border:1px solid #d3e1d6;background:#eaf3ec}
+    .summary b{display:block;margin-top:2px;font-size:14px;color:#17442d}
+    h2{margin:18px 0 6px;font-size:13px;color:#17442d;break-after:avoid}
     table{width:100%;border-collapse:collapse;margin:0 0 6px}
     thead{display:table-header-group}
     tr{break-inside:avoid}

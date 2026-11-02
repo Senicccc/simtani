@@ -59,3 +59,29 @@
     <span>Anggota aktif</span>
   </label>
 </div>
+
+@if ($anggota)
+  <div class="form-section">
+    <h3>Kompetensi</h3>
+    <p class="form-note">Perbarui tingkat kemampuan anggota untuk setiap jenis pekerjaan. Pilih “Belum dicatat” jika belum diketahui.</p>
+    <div class="competency-grid">
+      @foreach ($jenisPekerjaan as $index => $jenis)
+        <div class="competency-row">
+          <div>
+            <label for="kompetensi-{{ $jenis->id }}">{{ $jenis->nama_pekerjaan }}</label>
+            <span class="hint">Tingkat kemampuan</span>
+          </div>
+          <input type="hidden" name="kompetensi[{{ $index }}][jenis_pekerjaan_id]" value="{{ $jenis->id }}">
+          <select id="kompetensi-{{ $jenis->id }}"
+                  name="kompetensi[{{ $index }}][tingkat_kemampuan]"
+                  class="@error('kompetensi.'.$index.'.tingkat_kemampuan') is-invalid @enderror">
+            <option value="" @selected(blank(old('kompetensi.'.$index.'.tingkat_kemampuan', $kompetensi[$jenis->id] ?? '')))>Belum dicatat</option>
+            <option value="pemula" @selected(old('kompetensi.'.$index.'.tingkat_kemampuan', $kompetensi[$jenis->id] ?? '') === 'pemula')>Pemula</option>
+            <option value="menengah" @selected(old('kompetensi.'.$index.'.tingkat_kemampuan', $kompetensi[$jenis->id] ?? '') === 'menengah')>Menengah</option>
+            <option value="mahir" @selected(old('kompetensi.'.$index.'.tingkat_kemampuan', $kompetensi[$jenis->id] ?? '') === 'mahir')>Mahir</option>
+          </select>
+        </div>
+      @endforeach
+    </div>
+  </div>
+@endif

@@ -1,6 +1,7 @@
 .env
 .env.*
 !.env.example
+!.env.infinityfree.example
 /vendor/
 /node_modules/
 /public/build/

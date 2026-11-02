@@ -6,11 +6,16 @@ use App\Models\JenisPekerjaan;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use RuntimeException;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        if (app()->isProduction()) {
+            throw new RuntimeException('Seeder demo tidak boleh dijalankan di production. Buat akun administrator secara manual.');
+        }
+
         $admin = User::updateOrCreate(
             ['nomor_anggota' => 'ADM-001'],
             [
@@ -34,6 +39,12 @@ class DatabaseSeeder extends Seeder
             ['nomor_anggota' => 'ANG-007', 'nama_lengkap' => 'Laila Rahma', 'email' => 'laila.rahma@simtani.local', 'nomor_wa' => '081234567807', 'status_aktif' => true],
             ['nomor_anggota' => 'ANG-008', 'nama_lengkap' => 'Anton Nugroho', 'email' => 'anton.nugroho@simtani.local', 'nomor_wa' => '081234567808', 'status_aktif' => true],
             ['nomor_anggota' => 'ANG-009', 'nama_lengkap' => 'Nila Putri', 'email' => 'nila.putri@simtani.local', 'nomor_wa' => '081234567809', 'status_aktif' => false],
+            ['nomor_anggota' => 'ANG-010', 'nama_lengkap' => 'Wawan Setiawan', 'email' => 'wawan.setiawan@simtani.local', 'nomor_wa' => '081234568010', 'status_aktif' => true],
+            ['nomor_anggota' => 'ANG-011', 'nama_lengkap' => 'Dewi Kartika', 'email' => 'dewi.kartika@simtani.local', 'nomor_wa' => '081234568011', 'status_aktif' => true],
+            ['nomor_anggota' => 'ANG-012', 'nama_lengkap' => 'Agus Firmansyah', 'email' => 'agus.firmansyah@simtani.local', 'nomor_wa' => '081234568012', 'status_aktif' => true],
+            ['nomor_anggota' => 'ANG-013', 'nama_lengkap' => 'Sri Wahyuni', 'email' => 'sri.wahyuni@simtani.local', 'nomor_wa' => '081234568013', 'status_aktif' => true],
+            ['nomor_anggota' => 'ANG-014', 'nama_lengkap' => 'Eko Prabowo', 'email' => 'eko.prabowo@simtani.local', 'nomor_wa' => '081234568014', 'status_aktif' => true],
+            ['nomor_anggota' => 'ANG-015', 'nama_lengkap' => 'Fitri Handayani', 'email' => 'fitri.handayani@simtani.local', 'nomor_wa' => '081234568015', 'status_aktif' => true],
         ];
 
         foreach ($members as $member) {

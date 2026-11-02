@@ -98,6 +98,13 @@ npm install
 npm run dev
 ```
 
+## Hosting
+
+For production configuration, the InfinityFree upload layout, database
+initialization, and first administrator setup, follow
+[Deploy SIMTANI to InfinityFree](./DEPLOY-INFINITYFREE.md). Never seed demo
+accounts into a production database.
+
 ### Frontend handoff notes
 
 The core workflows are available in the application. The following items are recommended for further UI review and refinement; they do not imply that the underlying workflows are missing:

@@ -11,7 +11,7 @@
 
 <div class="panel">
   <div class="table-scroll">
-    <table>
+    <table class="member-mobile-table">
       <thead>
         <tr>
           <th>Kegiatan</th>
@@ -22,9 +22,9 @@
       <tbody>
         @forelse ($penugasan as $item)
           <tr>
-            <td><span class="cell-name">{{ $item->jadwal->nama_kegiatan ?? '-' }}</span></td>
-            <td class="cell-num">{{ $item->completed_at?->format('d/m/Y H:i') ?? '-' }}</td>
-            <td>@include('admin.partials.status-badge', ['type' => 'tugas', 'status' => $item->status])</td>
+            <td class="member-mobile-primary" data-label="Kegiatan"><span class="cell-name">{{ $item->jadwal->nama_kegiatan ?? '-' }}</span></td>
+            <td class="cell-num" data-label="Selesai pada">{{ $item->completed_at?->format('d/m/Y H:i') ?? '-' }}</td>
+            <td data-label="Status">@include('admin.partials.status-badge', ['type' => 'tugas', 'status' => $item->status])</td>
           </tr>
         @empty
           <tr><td colspan="3"><div class="empty-state">Belum ada riwayat.</div></td></tr>

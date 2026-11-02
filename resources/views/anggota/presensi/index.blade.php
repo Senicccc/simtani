@@ -11,7 +11,7 @@
 
 <div class="panel">
   <div class="table-scroll">
-    <table>
+    <table class="member-mobile-table">
       <thead>
         <tr>
           <th>Kegiatan</th>
@@ -24,14 +24,14 @@
       <tbody>
         @forelse ($presensi as $item)
           <tr>
-            <td>
+            <td class="member-mobile-primary" data-label="Kegiatan">
               <span class="cell-name">{{ $item->penugasan->jadwal->nama_kegiatan ?? '-' }}</span>
               <span class="cell-sub">{{ $item->tanggal?->format('d/m/Y') }}</span>
             </td>
-            <td class="cell-num">{{ $item->waktu_check_in?->format('d/m/Y H:i') ?? '-' }}</td>
-            <td class="cell-num">{{ $item->waktu_check_out?->format('d/m/Y H:i') ?? '-' }}</td>
-            <td>@include('admin.partials.status-badge', ['type' => 'presensi', 'status' => $item->status])</td>
-            <td>
+            <td class="cell-num" data-label="Mulai">{{ $item->waktu_check_in?->format('d/m/Y H:i') ?? '-' }}</td>
+            <td class="cell-num" data-label="Selesai">{{ $item->waktu_check_out?->format('d/m/Y H:i') ?? '-' }}</td>
+            <td data-label="Status">@include('admin.partials.status-badge', ['type' => 'presensi', 'status' => $item->status])</td>
+            <td data-label="Tugas">
               <div class="row-actions">
                 <a href="{{ route('anggota.tugas.show', $item->penugasan) }}" class="table-action">Buka Tugas</a>
               </div>
