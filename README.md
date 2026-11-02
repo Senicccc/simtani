@@ -1,154 +1,55 @@
 # SIMTANI
 
-SIMTANI is a Laravel application for managing agricultural workers, work schedules, assignments, attendance, wages, change requests, and operational reports.
+SIMTANI is a web application for coordinating agricultural work and managing the people, schedules, attendance, and payments involved. It provides administrators and members with role-specific tools for managing work from scheduling through completion and wage payment.
 
-## Requirements
+## Application overview
 
-- PHP and Composer
+The application supports these core workflows:
+
+- Maintain member profiles, employment status, and job skills.
+- Create agricultural work schedules with dates, locations, staffing requirements, and wage budgets.
+- Assign members manually or generate suggested assignments based on skills, availability, and workload.
+- Track assignment progress, daily attendance, completion reports, and administrator verification.
+- Record leave and absence, review staffing gaps, and assign replacements when needed.
+- Submit and process assignment change requests.
+- Manage wage records and payment status.
+- Review operational reports and export report data.
+
+## User roles
+
+### Administrators
+
+Administrators manage members, job categories, schedules, and assignments. They can review attendance and completion reports, verify completed work, address change requests and staffing gaps, manage wage payments, and access operational reports.
+
+### Members
+
+Members can view their assigned work and schedules, record attendance, update assignment progress, submit completion reports and change requests, and review their wage and payment status. Contact options for administrators are available when configured.
+
+## Assignment workflow
+
+Assignments typically move through the following statuses:
+
+1. **Assigned:** A member has been assigned to scheduled work.
+2. **In progress:** The member has started the work.
+3. **Waiting for verification:** The member has submitted a completion report.
+4. **Completed:** An administrator has verified the work.
+
+Attendance is recorded for each assignment and work date. Wage records are managed after the applicable completion and verification requirements are met.
+
+## Technology
+
+- PHP 8.3 or later
+- Laravel 13
 - MySQL
-- Node.js and npm for frontend asset development
+- Blade
+- Vite and Tailwind CSS for frontend assets
 
-## Local setup with Laragon
+## Production and maintenance
 
-Each developer should use a separate local database. After pulling the latest project changes:
+SIMTANI is intended to run with production configuration. Keep environment settings and credentials private, disable debug mode in production, and create administrator accounts through the authorized production process.
 
-1. Start MySQL in Laragon.
-2. Create a database named `simtani` in phpMyAdmin, or run:
+Before deploying application updates, back up the production database and uploaded files, then apply only the required database migrations. Do not run demo seeders or destructive database commands against production data.
 
-   ```sql
-   CREATE DATABASE IF NOT EXISTS simtani
-     CHARACTER SET utf8mb4
-     COLLATE utf8mb4_unicode_ci;
-   ```
+## Access
 
-3. Configure the database connection in `.env`. If the file already exists, update only the database settings and retain the other configuration:
-
-   ```dotenv
-   DB_CONNECTION=mysql
-   DB_HOST=127.0.0.1
-   DB_PORT=3306
-   DB_DATABASE=simtani
-   DB_USERNAME=root
-   DB_PASSWORD=
-   ```
-
-4. From the project directory, install PHP dependencies and apply migrations with demo data:
-
-   ```bash
-   composer install
-   php artisan config:clear
-   php artisan migrate --seed
-   ```
-
-   Migrations apply schema changes that have not yet been run. The seeder creates or updates the SIMTANI sample records. You can run this command again after pulling new migrations or seeder changes.
-
-5. If `.env` does not exist, copy `.env.example` to `.env`. Generate an application key only for a new installation that does not already have one:
-
-   ```bash
-   php artisan key:generate
-   ```
-
-6. Start the application:
-
-   ```bash
-   php artisan serve
-   ```
-
-### Database synchronization for team members
-
-- Run `php artisan migrate --seed` if your local database is missing the latest schema or sample data.
-- No database action is required for frontend-only changes if your local schema is already up to date.
-- Laravel runs only migrations that have not already been applied.
-- Keep a separate local `simtani` database for each developer. Do not use a production or shared database for local development.
-- Do not use `php artisan migrate:fresh` for routine synchronization; it drops every table and all data in the active database.
-
-## Demo accounts
-
-| Role | Email | Password |
-|---|---|---|
-| Administrator | `admin1@simtani.test` | `password` |
-| Member | `dedi.prasetyo@simtani.local` | `anggota123` |
-
-The seeder also creates active and inactive members, job categories, schedules, assignments, attendance, wages, and related change requests. These accounts and records are for local development and demonstrations only.
-
-### Refreshing demo data
-
-To create or update sample records without dropping the database:
-
-```bash
-php artisan db:seed
-```
-
-The seeder uses `updateOrCreate`, so existing sample records are updated and unrelated records are not deleted.
-
-To drop all tables in the active database, rerun migrations, and seed sample data from scratch:
-
-```bash
-php artisan migrate:fresh --seed
-```
-
-**Warning:** `migrate:fresh` permanently deletes every table and all data in the active database. Use it only with a disposable local or demo database. Confirm that `.env` points to your local `simtani` database and back up any data you need to keep. Never run it against a production or shared database.
-
-## Frontend development
-
-The application uses Laravel Blade views and assets in `public/`. To install and run Vite during frontend development:
-
-```bash
-npm install
-npm run dev
-```
-
-## Hosting
-
-For production configuration, the InfinityFree upload layout, database
-initialization, and first administrator setup, follow
-[Deploy SIMTANI to InfinityFree](./DEPLOY-INFINITYFREE.md). Never seed demo
-accounts into a production database.
-
-### Frontend handoff notes
-
-The core workflows are available in the application. The following items are recommended for further UI review and refinement; they do not imply that the underlying workflows are missing:
-
-- Review the layout on mobile and desktop, particularly the schedule, assignment, attendance, and wage tables. Keep key information and actions accessible on narrow screens.
-- Refine button hierarchy and wording on task details. Members should be able to review task information before acting, with separate check-in and check-out actions and confirmation before each action.
-- Review schedule, assignment, attendance, change-request, and payment status labels. Present clear user-facing wording rather than internal values such as `in_progress` or `belum_dibayar`.
-- Make leave and absence flows easy to understand, including the affected date, leave reason, and how administrators fill staffing gaps.
-- Ensure administrator dashboard cards use clear labels and link to lists filtered to the corresponding status.
-- Review empty states, validation errors, and success or failure messages. Check keyboard focus, form labels, contrast, and touch target sizes for accessibility.
-- Coordinate any proposed business-rule or backend workflow changes before implementing them as frontend changes.
-
-## Assignment lifecycle
-
-1. `assigned`: the member has been assigned to the work.
-2. `in_progress`: the member has started the work.
-3. `waiting_verification`: the member has submitted a completion report.
-4. `completed`: an administrator has verified the work. Wages are generated by dividing the schedule's total wage equally among its members once the completion and verification requirements are met.
-
-Attendance is recorded against an assignment for each work date. Leave and absence are recorded separately; administrators can assign a replacement when daily attendance falls below the required staffing level.
-
-## Features
-
-### Administrator
-
-- Manage active and inactive members, job categories, schedules, and assignments.
-- Generate assignments based on member skills, schedule conflicts, and workload, or fill available positions manually.
-- Review attendance and completion reports, verify work, and manage wages and payment status.
-- Review assignment change and objection requests.
-- Filter operational reports by schedules, assignments, attendance, and wages; export CSV or print/save as PDF.
-- Review dashboard summaries for schedule status, pending verification, staffing gaps, change requests, and unpaid wages.
-
-### Member
-
-- View assigned work, schedule details, and other members assigned to the same activity.
-- Start work, record daily attendance, check in and out, and submit a completion report.
-- View wages after the applicable completion and verification requirements are met, along with payment status.
-- Submit and track assignment change requests.
-- Contact administrators by WhatsApp or email when contact details are available.
-
-## Tests
-
-Run the application test suite with:
-
-```bash
-php artisan test
-```
+Use the production URL provided by the SIMTANI administrator. Sign-in access is managed by the organization.
