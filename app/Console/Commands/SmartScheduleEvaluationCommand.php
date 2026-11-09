@@ -10,6 +10,7 @@ use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
 use RuntimeException;
 
 #[Signature('smart:evaluasi {--dari=2026-11-02} {--sampai=} {--csv=}')]
@@ -41,7 +42,7 @@ class SmartScheduleEvaluationCommand extends Command
             ->orderBy('id')
             ->get(['id', 'nama_lengkap', 'nomor_anggota']);
         $memberIds = $members->modelKeys();
-        $workloads = $criteria->workloadsForPeriod($periodStart, $periodEnd, $memberIds, null);
+        $workloads = $criteria->workloadsForPeriod($periodStart, $periodEnd, $memberIds);
         $memberStats = [];
 
         foreach ($members as $member) {
@@ -56,19 +57,28 @@ class SmartScheduleEvaluationCommand extends Command
         }
 
         $assignments = DB::table('penugasan as p')
-            ->join('jadwal as j', 'j.id', '=', 'p.jadwal_id')
+            ->leftJoin('jadwal as j', 'j.id', '=', 'p.jadwal_id')
             ->leftJoin('kompetensi_anggota as k', function ($join): void {
                 $join->on('k.anggota_id', '=', 'p.anggota_id')
                     ->on('k.jenis_pekerjaan_id', '=', 'j.jenis_pekerjaan_id');
             })
             ->whereIn('p.anggota_id', $memberIds)
             ->where('p.status', '!=', 'cancelled')
-            ->where('j.tanggal', '<=', $periodEnd->toDateString())
+            ->where(function ($query) use ($periodStart, $periodEnd): void {
+                $query->where(function ($overlapping) use ($periodStart, $periodEnd): void {
+                    $overlapping
+                        ->whereRaw('COALESCE(p.tanggal_mulai, j.tanggal) <= ?', [$periodEnd->toDateString()])
+                        ->whereRaw('COALESCE(p.tanggal_selesai, j.tanggal_selesai, j.tanggal) >= ?', [$periodStart->toDateString()]);
+                })->orWhereRaw(
+                    'COALESCE(p.tanggal_mulai, j.tanggal) > COALESCE(p.tanggal_selesai, j.tanggal_selesai, j.tanggal)',
+                )->orWhereNull('j.id');
+            })
             ->get([
                 'p.anggota_id',
                 'p.sumber_penugasan',
                 'p.tanggal_mulai as assignment_start',
                 'p.tanggal_selesai as assignment_end',
+                'j.id as schedule_id',
                 'j.tanggal as schedule_start',
                 'j.tanggal_selesai as schedule_end',
                 'k.tingkat_kemampuan',
@@ -76,8 +86,16 @@ class SmartScheduleEvaluationCommand extends Command
 
         $assignmentTotals = ['otomatis' => 0, 'manual' => 0, 'hasil_perubahan' => 0];
         foreach ($assignments as $assignment) {
+            if ($assignment->schedule_id === null) {
+                throw new InvalidArgumentException('Penugasan tidak memiliki jadwal terkait.');
+            }
+
             $assignmentStart = Carbon::parse($assignment->assignment_start ?? $assignment->schedule_start)->startOfDay();
             $assignmentEnd = Carbon::parse($assignment->assignment_end ?? $assignment->schedule_end ?? $assignment->schedule_start)->startOfDay();
+
+            if ($assignmentStart->gt($assignmentEnd)) {
+                throw new InvalidArgumentException('Rentang tanggal penugasan tidak valid.');
+            }
 
             if ($assignmentStart->gt($periodEnd) || $assignmentEnd->lt($periodStart)) {
                 continue;
@@ -118,7 +136,17 @@ class SmartScheduleEvaluationCommand extends Command
         $hours = array_column($memberStats, 'total_jam');
         $summary = $this->summarize($hours, $memberStats);
         $this->table(
-            ['Nomor', 'Anggota', 'Total jam', 'Level rata-rata', 'Otomatis', 'Manual', 'Hasil perubahan', 'Tukar', 'Sanggah'],
+            [
+                'Nomor',
+                'Anggota',
+                'Total jam C1',
+                'Level rata-rata',
+                'Jml otomatis (non-cancelled)',
+                'Jml manual (non-cancelled)',
+                'Jml hasil perubahan (non-cancelled)',
+                'Tukar',
+                'Sanggah',
+            ],
             array_map(static function (array $member): array {
                 return [
                     $member['nomor_anggota'],
@@ -138,9 +166,12 @@ class SmartScheduleEvaluationCommand extends Command
         $this->info('Ringkasan '.$periodStart->toDateString().' sampai '.$periodEnd->toDateString());
         $this->line('SD jam populasi: '.number_format($summary['sd_jam'], 4, ',', '.'));
         $this->line('Gini: '.number_format($summary['gini'], 4, ',', '.'));
-        $this->line('Rasio maksimum/rata-rata: '.number_format($summary['rasio_maksimum_rata_rata'], 4, ',', '.'));
+        $this->line('Rasio maksimum/rata-rata: '.$this->formatOptionalNumber($summary['rasio_maksimum_rata_rata']));
         $this->line('Rata-rata level kompetensi per penugasan: '.$this->formatOptionalNumber($summary['rata_rata_kompetensi']));
-        $this->line('Penugasan per sumber: '.json_encode($assignmentTotals, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
+        $this->line(
+            'Jumlah record penugasan non-cancelled per sumber (semua status selain cancelled; bukan jam C1): '
+            .json_encode($assignmentTotals, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE),
+        );
         $this->line('Permintaan perubahan per jenis: '.json_encode($changeRequestTotals, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
 
         $csvPath = (string) $this->option('csv');
@@ -166,7 +197,7 @@ class SmartScheduleEvaluationCommand extends Command
     /**
      * @param  array<int, float>  $hours
      * @param  array<int, array<string, mixed>>  $members
-     * @return array{sd_jam: float, gini: float, rasio_maksimum_rata_rata: float, rata_rata_kompetensi: ?float}
+     * @return array{sd_jam: float, gini: float, rasio_maksimum_rata_rata: ?float, rata_rata_kompetensi: ?float}
      */
     private function summarize(array $hours, array $members): array
     {
@@ -191,14 +222,14 @@ class SmartScheduleEvaluationCommand extends Command
         return [
             'sd_jam' => sqrt($variance),
             'gini' => $mean === 0.0 || $count === 0 ? 0.0 : $pairwiseDifferences / (2 * $count ** 2 * $mean),
-            'rasio_maksimum_rata_rata' => $mean === 0.0 || $count === 0 ? 0.0 : max($hours) / $mean,
+            'rasio_maksimum_rata_rata' => $mean === 0.0 || $count === 0 ? null : max($hours) / $mean,
             'rata_rata_kompetensi' => $competencyLevels === [] ? null : array_sum($competencyLevels) / count($competencyLevels),
         ];
     }
 
     private function formatOptionalNumber(?float $value): string
     {
-        return $value === null ? 'tidak ada penugasan' : number_format($value, 4, ',', '.');
+        return $value === null ? 'N/A' : number_format($value, 4, ',', '.');
     }
 
     /**
@@ -219,7 +250,22 @@ class SmartScheduleEvaluationCommand extends Command
             throw new RuntimeException('Tidak dapat membuka lokasi CSV untuk ditulis.');
         }
 
-        $this->writeCsvRow($file, ['nomor_anggota', 'nama_lengkap', 'total_jam', 'rata_rata_level_kompetensi', 'otomatis', 'manual', 'hasil_perubahan', 'tukar', 'sanggah']);
+        if (fwrite($file, "\xEF\xBB\xBF") !== 3) {
+            fclose($file);
+            throw new RuntimeException('Gagal menulis penanda encoding CSV.');
+        }
+
+        $this->writeCsvRow($file, [
+            'nomor_anggota',
+            'nama_lengkap',
+            'total_jam_C1',
+            'rata_rata_level_kompetensi',
+            'jumlah_record_penugasan_non_cancelled_otomatis',
+            'jumlah_record_penugasan_non_cancelled_manual',
+            'jumlah_record_penugasan_non_cancelled_hasil_perubahan',
+            'tukar',
+            'sanggah',
+        ]);
         foreach ($members as $member) {
             $this->writeCsvRow($file, [
                 $member['nomor_anggota'],
@@ -237,10 +283,10 @@ class SmartScheduleEvaluationCommand extends Command
         $this->writeCsvRow($file, []);
         $this->writeCsvRow($file, ['metric', 'value']);
         foreach ($summary as $metric => $value) {
-            $this->writeCsvRow($file, [$metric, $value]);
+            $this->writeCsvRow($file, [$metric, $value ?? 'N/A']);
         }
         foreach ($assignmentTotals as $source => $count) {
-            $this->writeCsvRow($file, ['penugasan_'.$source, $count]);
+            $this->writeCsvRow($file, ['jumlah_record_penugasan_non_cancelled_'.$source, $count]);
         }
         foreach ($changeRequestTotals as $type => $count) {
             $this->writeCsvRow($file, ['perubahan_'.$type, $count]);

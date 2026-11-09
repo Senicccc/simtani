@@ -80,11 +80,12 @@ class AutoScheduleService
             }
 
             $selected = [];
+            $assignmentIdsByMemberId = [];
             foreach ($selectedMemberIds as $memberId) {
                 $candidate = $candidatesById->get($memberId);
                 $member = User::query()->findOrFail($memberId);
 
-                Penugasan::create([
+                $assignment = Penugasan::create([
                     'jadwal_id' => $jadwal->id,
                     'anggota_id' => $member->id,
                     'original_anggota_id' => $member->id,
@@ -93,6 +94,7 @@ class AutoScheduleService
                     'assigned_at' => now(),
                 ]);
 
+                $assignmentIdsByMemberId[$memberId] = $assignment->id;
                 $selected[] = $candidate;
             }
 
@@ -102,6 +104,7 @@ class AutoScheduleService
             $logRows = array_map(static fn (array $candidate, int $index): array => [
                 'jadwal_id' => $jadwal->id,
                 'anggota_id' => $candidate['anggota_id'],
+                'penugasan_id' => $assignmentIdsByMemberId[$candidate['anggota_id']] ?? null,
                 'algoritma' => $algorithm,
                 'peringkat' => $candidate['peringkat'] ?? $index + 1,
                 'skor' => round((float) ($candidate['skor'] ?? 0), 6),
@@ -130,7 +133,7 @@ class AutoScheduleService
      *     reason: string,
      *     skor?: float,
      *     peringkat?: int,
-     *     rincian?: array<string, float|int>
+     *     rincian?: array<string, mixed>
      * }>
      */
     public function manualRecommendationsForSchedule(Jadwal $jadwal, ScheduleConflictService $conflicts): array
@@ -149,7 +152,7 @@ class AutoScheduleService
      *     reason: string,
      *     skor?: float,
      *     peringkat?: int,
-     *     rincian?: array<string, float|int>
+     *     rincian?: array<string, mixed>
      * }>
      */
     private function candidatesForSchedule(Jadwal $jadwal, ScheduleConflictService $conflicts): array
@@ -176,14 +179,49 @@ class AutoScheduleService
         ), $weights, (int) config('smart.jeda_maksimum_hari', 30));
         $candidatesById = array_column($candidates, null, 'anggota_id');
 
-        return array_map(function (array $rankedCandidate, int $index) use ($candidatesById): array {
+        return array_map(function (array $rankedCandidate, int $index) use ($candidatesById, $criteriaOrder, $weights, $jadwal): array {
             $candidate = $candidatesById[$rankedCandidate['anggota_id']];
+            $utilities = $rankedCandidate['utilitas'];
             $details = [
                 'beban_jam' => $rankedCandidate['beban'],
                 'jeda_hari' => $rankedCandidate['jeda'],
                 'kompetensi_level' => $rankedCandidate['kompetensi'],
                 'kehadiran' => $rankedCandidate['kehadiran'],
-                ...$rankedCandidate['utilitas'],
+                ...$utilities,
+                'kriteria' => [
+                    'beban' => [
+                        'nilai_mentah' => $rankedCandidate['beban'],
+                        'utilitas' => $utilities['u1'],
+                        'bobot' => $weights['beban'],
+                    ],
+                    'jeda' => [
+                        'nilai_mentah' => $rankedCandidate['jeda'],
+                        'utilitas' => $utilities['u2'],
+                        'bobot' => $weights['jeda'],
+                    ],
+                    'kompetensi' => [
+                        'nilai_mentah' => $rankedCandidate['kompetensi'],
+                        'utilitas' => $utilities['u3'],
+                        'bobot' => $weights['kompetensi'],
+                    ],
+                    'kehadiran' => [
+                        'nilai_mentah' => $rankedCandidate['kehadiran'],
+                        'utilitas' => $utilities['u4'],
+                        'bobot' => $weights['kehadiran'],
+                    ],
+                ],
+                'urutan_kriteria' => array_values($criteriaOrder),
+                'parameter' => [
+                    'jendela_beban_mundur_hari' => (int) config('smart.jendela_beban_mundur_hari', 30),
+                    'jendela_beban_maju_hari' => (int) config('smart.jendela_beban_maju_hari', 30),
+                    'jendela_kehadiran_hari' => (int) config('smart.jendela_kehadiran_hari', 90),
+                    'jeda_maksimum_hari' => (int) config('smart.jeda_maksimum_hari', 30),
+                    'jam_bawaan_per_hari' => (float) config('smart.jam_bawaan_per_hari', 6),
+                    'jadwal_mulai' => $jadwal->tanggal?->toDateString(),
+                    'jadwal_selesai' => ($jadwal->tanggal_selesai ?? $jadwal->tanggal)?->toDateString(),
+                ],
+                'skor' => $rankedCandidate['skor'],
+                'skor_format_presisi_penuh' => sprintf('%.17g', $rankedCandidate['skor']),
             ];
 
             return [
@@ -191,6 +229,7 @@ class AutoScheduleService
                 'skor' => $rankedCandidate['skor'],
                 'peringkat' => $index + 1,
                 'rincian' => $details,
+                'reason' => $candidate['reason'].' · Skor SMART '.number_format($rankedCandidate['skor'], 12, '.', ''),
             ];
         }, $ranked, array_keys($ranked));
     }
@@ -287,12 +326,13 @@ class AutoScheduleService
 
     private function candidateReason(int $activeTasks, int $completedTasks, ?string $skillLevel): string
     {
-        $reason = $activeTasks === 0 ? 'Belum ada tugas aktif' : $activeTasks.' tugas aktif';
-        $reason .= ' · '.$completedTasks.' tugas selesai';
+        if ($skillLevel === null || $skillLevel === '') {
+            return 'belum ada kompetensi yang tercatat';
+        }
 
-        return $skillLevel
-            ? $reason.' · Kemampuan '.$skillLevel
-            : $reason.' · Kemampuan belum dicatat';
+        $reason = $activeTasks.' tugas aktif, '.$completedTasks.' tugas selesai, ';
+
+        return $reason.'kompetensi '.$skillLevel;
     }
 
     private function abilityOrder(?string $level): int

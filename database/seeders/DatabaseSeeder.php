@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\JenisPekerjaan;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use RuntimeException;
 
@@ -16,7 +17,8 @@ class DatabaseSeeder extends Seeder
             throw new RuntimeException('Seeder demo tidak boleh dijalankan di production. Buat akun administrator secara manual.');
         }
 
-        $admin = User::updateOrCreate(
+        DB::transaction(function (): void {
+        $admin = User::firstOrCreate(
             ['nomor_anggota' => 'ADM-001'],
             [
                 'nama_lengkap' => 'Admin SIMTANI',
@@ -47,8 +49,19 @@ class DatabaseSeeder extends Seeder
             ['nomor_anggota' => 'ANG-015', 'nama_lengkap' => 'Fitri Handayani', 'email' => 'fitri.handayani@simtani.local', 'nomor_wa' => '081234568015', 'status_aktif' => true],
         ];
 
+        for ($number = 16; $number <= 26; $number++) {
+            $memberNumber = sprintf('ANG-%03d', $number);
+            $members[] = [
+                'nomor_anggota' => $memberNumber,
+                'nama_lengkap' => sprintf('Anggota Simulasi %03d', $number),
+                'email' => sprintf('anggota%03d@example.test', $number),
+                'nomor_wa' => sprintf('081234568%03d', $number),
+                'status_aktif' => true,
+            ];
+        }
+
         foreach ($members as $member) {
-            User::updateOrCreate(
+            User::firstOrCreate(
                 ['nomor_anggota' => $member['nomor_anggota']],
                 [
                     ...$member,
@@ -68,7 +81,7 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($jobs as $name => $details) {
-            JenisPekerjaan::updateOrCreate(
+            JenisPekerjaan::firstOrCreate(
                 ['nama_pekerjaan' => $name],
                 [...$details, 'created_by' => $admin->id],
             );
@@ -77,5 +90,6 @@ class DatabaseSeeder extends Seeder
         if (app()->environment('local', 'testing')) {
             $this->call(SmartDemoSeeder::class);
         }
+        });
     }
 }

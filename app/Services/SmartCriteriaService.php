@@ -3,8 +3,10 @@
 namespace App\Services;
 
 use App\Models\Jadwal;
+use Carbon\Exceptions\InvalidFormatException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
 
 final class SmartCriteriaService
 {
@@ -27,11 +29,23 @@ final class SmartCriteriaService
 
         $periodStart = $periodStart->copy()->startOfDay();
         $periodEnd = $periodEnd->copy()->startOfDay();
+        if ($periodEnd->lt($periodStart)) {
+            throw new InvalidArgumentException('Rentang periode beban tidak valid.');
+        }
+
         $workloads = array_fill_keys($memberIds, 0.0);
         $assignments = DB::table('penugasan as p')
-            ->join('jadwal as j', 'j.id', '=', 'p.jadwal_id')
+            ->leftJoin('jadwal as j', 'j.id', '=', 'p.jadwal_id')
             ->whereIn('p.anggota_id', $memberIds)
-            ->where('j.tanggal', '<=', $periodEnd->toDateString())
+            ->where(function ($query) use ($periodStart, $periodEnd): void {
+                $query->where(function ($overlapping) use ($periodStart, $periodEnd): void {
+                    $overlapping
+                        ->whereRaw('COALESCE(p.tanggal_mulai, j.tanggal) <= ?', [$periodEnd->toDateString()])
+                        ->whereRaw('COALESCE(p.tanggal_selesai, j.tanggal_selesai, j.tanggal) >= ?', [$periodStart->toDateString()]);
+                })->orWhereRaw(
+                    'COALESCE(p.tanggal_mulai, j.tanggal) > COALESCE(p.tanggal_selesai, j.tanggal_selesai, j.tanggal)',
+                )->orWhereNull('j.id');
+            })
             ->when(
                 $statuses === null,
                 fn ($query) => $query->where('p.status', '!=', 'cancelled'),
@@ -42,6 +56,7 @@ final class SmartCriteriaService
                 'p.anggota_id',
                 'p.tanggal_mulai as assignment_start',
                 'p.tanggal_selesai as assignment_end',
+                'j.id as schedule_id',
                 'j.tanggal as schedule_start',
                 'j.tanggal_selesai as schedule_end',
                 'j.waktu_mulai',
@@ -50,8 +65,16 @@ final class SmartCriteriaService
             ->get();
 
         foreach ($assignments as $assignment) {
+            if ($assignment->schedule_id === null) {
+                throw new InvalidArgumentException('Penugasan tidak memiliki jadwal terkait.');
+            }
+
             $assignmentStart = Carbon::parse($assignment->assignment_start ?? $assignment->schedule_start)->startOfDay();
             $assignmentEnd = Carbon::parse($assignment->assignment_end ?? $assignment->schedule_end ?? $assignment->schedule_start)->startOfDay();
+
+            if ($assignmentStart->gt($assignmentEnd)) {
+                throw new InvalidArgumentException('Rentang tanggal penugasan tidak valid.');
+            }
 
             if ($assignmentStart->gt($periodEnd) || $assignmentEnd->lt($periodStart)) {
                 continue;
@@ -81,10 +104,21 @@ final class SmartCriteriaService
 
         $scheduleStart = Carbon::parse($jadwal->tanggal->toDateString())->startOfDay();
         $scheduleEnd = Carbon::parse(($jadwal->tanggal_selesai ?? $jadwal->tanggal)->toDateString())->startOfDay();
-        $loadWindowStart = $scheduleStart->copy()->subDays((int) config('smart.jendela_beban_mundur_hari', 30));
-        $loadWindowEnd = $scheduleEnd->copy()->addDays((int) config('smart.jendela_beban_maju_hari', 30));
-        $attendanceWindowStart = $scheduleStart->copy()->subDays((int) config('smart.jendela_kehadiran_hari', 90));
+        if ($scheduleEnd->lt($scheduleStart)) {
+            throw new InvalidArgumentException('Rentang tanggal jadwal tidak valid.');
+        }
+
+        $loadWindowBack = (int) config('smart.jendela_beban_mundur_hari', 30);
+        $loadWindowForward = (int) config('smart.jendela_beban_maju_hari', 30);
+        $attendanceWindow = (int) config('smart.jendela_kehadiran_hari', 90);
         $maximumGap = (int) config('smart.jeda_maksimum_hari', 30);
+        if ($loadWindowBack < 0 || $loadWindowForward < 0 || $attendanceWindow < 0 || $maximumGap <= 0) {
+            throw new InvalidArgumentException('Konfigurasi jendela tanggal atau batas jeda tidak valid.');
+        }
+
+        $loadWindowStart = $scheduleStart->copy()->subDays($loadWindowBack);
+        $loadWindowEnd = $scheduleEnd->copy()->addDays($loadWindowForward);
+        $attendanceWindowStart = $scheduleStart->copy()->subDays($attendanceWindow);
 
         $criteria = [];
         foreach ($memberIds as $memberId) {
@@ -107,13 +141,14 @@ final class SmartCriteriaService
         }
 
         $assignments = DB::table('penugasan as p')
-            ->join('jadwal as j', 'j.id', '=', 'p.jadwal_id')
+            ->leftJoin('jadwal as j', 'j.id', '=', 'p.jadwal_id')
             ->whereIn('p.anggota_id', $memberIds)
             ->where('p.status', '!=', 'cancelled')
             ->where('p.jadwal_id', '!=', $jadwal->id)
             ->select([
                 'p.anggota_id',
                 'p.status',
+                'j.id as schedule_id',
                 'p.tanggal_mulai as assignment_start',
                 'p.tanggal_selesai as assignment_end',
                 'j.tanggal as schedule_start',
@@ -124,8 +159,16 @@ final class SmartCriteriaService
             ->get();
 
         foreach ($assignments as $assignment) {
+            if ($assignment->schedule_id === null) {
+                throw new InvalidArgumentException('Penugasan tidak memiliki jadwal terkait.');
+            }
+
             $assignmentStart = Carbon::parse($assignment->assignment_start ?? $assignment->schedule_start)->startOfDay();
             $assignmentEnd = Carbon::parse($assignment->assignment_end ?? $assignment->schedule_end ?? $assignment->schedule_start)->startOfDay();
+
+            if ($assignmentStart->gt($assignmentEnd)) {
+                throw new InvalidArgumentException('Rentang tanggal penugasan tidak valid.');
+            }
 
             if ($assignmentEnd->lte($scheduleStart)) {
                 $gap = min($maximumGap, (int) $assignmentEnd->diffInDays($scheduleStart));
@@ -143,20 +186,25 @@ final class SmartCriteriaService
                 'pemula' => 1,
                 'menengah' => 2,
                 'mahir' => 3,
-                default => 1,
+                default => throw new InvalidArgumentException('Tingkat kompetensi anggota tidak valid.'),
             };
         }
 
         $attendance = DB::table('presensi as pr')
             ->join('penugasan as p', 'p.id', '=', 'pr.penugasan_id')
+            ->leftJoin('jadwal as j', 'j.id', '=', 'p.jadwal_id')
             ->whereIn('p.anggota_id', $memberIds)
             ->whereDate('pr.tanggal', '>=', $attendanceWindowStart->toDateString())
             ->whereDate('pr.tanggal', '<', $scheduleStart->toDateString())
             ->whereIn('pr.status', ['hadir', 'tidak_hadir'])
-            ->get(['p.anggota_id', 'pr.status']);
+            ->get(['p.anggota_id', 'pr.status', 'j.id as schedule_id']);
 
         $attendanceCounts = [];
         foreach ($attendance as $record) {
+            if ($record->schedule_id === null) {
+                throw new InvalidArgumentException('Penugasan pada presensi tidak memiliki jadwal terkait.');
+            }
+
             $attendanceCounts[$record->anggota_id][$record->status] =
                 ($attendanceCounts[$record->anggota_id][$record->status] ?? 0) + 1;
         }
@@ -173,15 +221,27 @@ final class SmartCriteriaService
 
     private function hoursPerDay(?string $startTime, ?string $endTime): float
     {
-        if (! $startTime || ! $endTime) {
-            return (float) config('smart.jam_bawaan_per_hari', 6);
+        $defaultHours = (float) config('smart.jam_bawaan_per_hari', 6);
+        if (! is_finite($defaultHours) || $defaultHours <= 0) {
+            throw new InvalidArgumentException('Jam bawaan per hari harus berupa angka finite yang lebih besar dari nol.');
         }
 
-        $referenceDate = '2000-01-01 ';
-        $start = Carbon::parse($referenceDate.$startTime);
-        $end = Carbon::parse($referenceDate.$endTime);
+        if (! $startTime || ! $endTime
+            || ! preg_match('/^\d{2}:\d{2}(?::\d{2})?$/', $startTime)
+            || ! preg_match('/^\d{2}:\d{2}(?::\d{2})?$/', $endTime)) {
+            return $defaultHours;
+        }
+
+        try {
+            $referenceDate = '2000-01-01 ';
+            $start = Carbon::parse($referenceDate.$startTime);
+            $end = Carbon::parse($referenceDate.$endTime);
+        } catch (InvalidFormatException) {
+            return $defaultHours;
+        }
+
         $durationHours = ($end->getTimestamp() - $start->getTimestamp()) / 3600;
 
-        return $durationHours > 0 ? $durationHours : (float) config('smart.jam_bawaan_per_hari', 6);
+        return $durationHours > 0 ? $durationHours : $defaultHours;
     }
 }
